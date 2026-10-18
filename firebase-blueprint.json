@@ -51,6 +51,18 @@
         "date": { "type": "string" }
       },
       "required": ["score", "total", "date"]
+    },
+    "PracticeSession": {
+      "title": "Practice Session",
+      "description": "Recorded conversation practice session with AI",
+      "type": "object",
+      "properties": {
+        "scenario": { "type": "string", "maxLength": 100 },
+        "level": { "type": "string", "enum": ["Beginner", "Intermediate"] },
+        "messageCount": { "type": "number" },
+        "date": { "type": "string" }
+      },
+      "required": ["scenario", "level", "messageCount", "date"]
     }
   },
   "firestore": {
@@ -69,6 +81,10 @@
     "/users/{userId}/quizResults/{resultId}": {
       "schema": "QuizResult",
       "description": "User quiz completion results"
+    },
+    "/users/{userId}/practiceSessions/{sessionId}": {
+      "schema": "PracticeSession",
+      "description": "User AI practice session history"
     }
   }
 }

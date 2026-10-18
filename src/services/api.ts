@@ -10,6 +10,21 @@ export class ApiError extends Error {
   }
 }
 
+export interface AiChatReply {
+  replyKannada: string;
+  replyRoman: string;
+  replyEnglish: string;
+  correction: string | null;
+  tip: string | null;
+  timestamp: string;
+}
+
+export interface ChatHint {
+  kannada: string;
+  roman: string;
+  english: string;
+}
+
 export const api = {
   // GET /api/lessons - Summary list
   async getLessons(): Promise<Lesson[]> {
@@ -110,24 +125,82 @@ export const api = {
     return chatScenariosJson as unknown as ChatScenario[];
   },
 
-  // POST /api/chat
-  async sendChatMessage(message: string, scenarioId: string): Promise<{
-    sender: 'bot';
-    kannada: string;
-    roman: string;
-    english: string;
-    timestamp: string;
-  }> {
+  // POST /api/chat - Call Gemini on server with Firebase user authentication
+  async sendAiChat(params: {
+    scenario: string;
+    level: string;
+    history: Array<{ sender: 'user' | 'bot'; text?: string; kannada?: string }>;
+    userMessage: string;
+    idToken: string;
+  }): Promise<AiChatReply> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (params.idToken) {
+      headers['Authorization'] = `Bearer ${params.idToken}`;
+    }
+
     const res = await fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, scenarioId })
+      headers,
+      body: JSON.stringify({
+        scenario: params.scenario,
+        level: params.level,
+        history: params.history,
+        userMessage: params.userMessage,
+      }),
     });
+
     if (!res.ok) {
-      throw new ApiError('Failed to connect to chat API', res.status);
+      let errMessage = 'Failed to generate response.';
+      try {
+        const errorJson = await res.json();
+        errMessage = errorJson.message || errMessage;
+      } catch {}
+      throw new ApiError(errMessage, res.status);
     }
+
     const json = await res.json();
+    if (!json.success || !json.reply) {
+      throw new ApiError(json.message || 'Invalid reply from AI');
+    }
     return json.reply;
+  },
+
+  // POST /api/chat/hint - Ask Gemini for what to say next
+  async getChatHint(params: {
+    scenario: string;
+    level: string;
+    history: Array<{ sender: 'user' | 'bot'; text?: string; kannada?: string }>;
+    idToken: string;
+  }): Promise<ChatHint> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (params.idToken) {
+      headers['Authorization'] = `Bearer ${params.idToken}`;
+    }
+
+    const res = await fetch('/api/chat/hint', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        scenario: params.scenario,
+        level: params.level,
+        history: params.history,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new ApiError('Failed to fetch conversation hint', res.status);
+    }
+
+    const json = await res.json();
+    return json.hint || {
+      kannada: 'ಎಷ್ಟು ರೂಪಾಯಿ ಆಗುತ್ತೆ?',
+      roman: 'Eshtu roopayi aagutte?',
+      english: 'How many rupees will it be?',
+    };
   },
 
   // GET /api/quiz

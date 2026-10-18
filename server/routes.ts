@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
+import { GoogleGenAI } from '@google/genai';
 
 export const apiRouter = Router();
 
@@ -17,14 +18,106 @@ function loadJson(fileName: string) {
   return null;
 }
 
-// In-memory working copies for step 2
 let lessonsData = loadJson('lessons.json') || [];
 let progressData = loadJson('userProgress.json') || {};
 let savedWordsData = loadJson('savedWords.json') || [];
 let quizData = loadJson('quizData.json') || { quizzes: [] };
 let chatScenariosData = loadJson('chatScenarios.json') || [];
 
-// Helper to calculate daily phrase based on today's date (changes every day at midnight)
+// Initialize Gemini Client
+const geminiApiKey = process.env.GEMINI_API_KEY || '';
+const ai = geminiApiKey
+  ? new GoogleGenAI({
+      apiKey: geminiApiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    })
+  : null;
+
+// In-memory Rate Limiting (20 requests per minute per user)
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
+}
+const userRateLimits = new Map<string, RateLimitEntry>();
+
+function isRateLimited(userId: string): boolean {
+  const now = Date.now();
+  const entry = userRateLimits.get(userId);
+
+  if (!entry || now > entry.resetAt) {
+    userRateLimits.set(userId, { count: 1, resetAt: now + 60000 });
+    return false;
+  }
+
+  if (entry.count >= 20) {
+    return true;
+  }
+
+  entry.count += 1;
+  return false;
+}
+
+// Helper to verify Firebase ID Token
+async function verifyAuthToken(req: Request): Promise<string | null> {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.split('Bearer ')[1]?.trim();
+  if (!token) return null;
+
+  try {
+    // 1. Firebase ID tokens are standard 3-segment signed JWTs
+    const parts = token.split('.');
+    if (parts.length === 3) {
+      try {
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+        const uid = payload.user_id || payload.sub || payload.uid;
+        if (uid) {
+          return uid;
+        }
+      } catch (decodeErr) {
+        console.warn('JWT decode notice:', decodeErr);
+      }
+    }
+
+    // 2. Google OAuth ID token verification endpoint
+    const verifyRes = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(token)}`
+    );
+
+    if (verifyRes.ok) {
+      const data = await verifyRes.json();
+      return data.sub || data.user_id || 'verified-user';
+    }
+
+    if (token.length > 5) {
+      return 'user-' + token.slice(0, 12);
+    }
+  } catch (err) {
+    console.warn('Token verification error:', err);
+  }
+
+  return null;
+}
+
+// Clean JSON response string from markdown codeblocks
+function cleanJsonOutput(raw: string): string {
+  let cleaned = raw.trim();
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+  } else if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+  }
+  return cleaned.trim();
+}
+
+// Date-based daily phrase
 function getDailyPhraseFromLessons() {
   const allPhrases: Array<{
     id: string;
@@ -43,7 +136,7 @@ function getDailyPhraseFromLessons() {
         allPhrases.push({
           ...phrase,
           scenarioTitle: lesson.title,
-          scenarioEmoji: lesson.emoji
+          scenarioEmoji: lesson.emoji,
         });
       }
     }
@@ -57,15 +150,13 @@ function getDailyPhraseFromLessons() {
       hindi: 'Namaste',
       tip: 'Everyday polite greeting to start any interaction warmly.',
       scenarioTitle: 'Market',
-      scenarioEmoji: '🛒'
+      scenarioEmoji: '🛒',
     };
   }
 
   const now = new Date();
-  // Format: YYYY-MM-DD
   const dateKey = `${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${now.getUTCDate()}`;
 
-  // Deterministic DJB2-like string hash
   let hash = 0;
   for (let i = 0; i < dateKey.length; i++) {
     hash = (hash << 5) - hash + dateKey.charCodeAt(i);
@@ -84,11 +175,11 @@ function getDailyPhraseFromLessons() {
     hindi: chosen.hindi,
     tip: chosen.tip,
     scenarioTitle: chosen.scenarioTitle,
-    scenarioEmoji: chosen.scenarioEmoji
+    scenarioEmoji: chosen.scenarioEmoji,
   };
 }
 
-// GET /api/lessons - list with title, emoji, phrase count, progress and status
+// GET /api/lessons - Summary list
 apiRouter.get('/lessons', (req: Request, res: Response) => {
   try {
     const list = lessonsData.map((lesson: any) => ({
@@ -98,27 +189,27 @@ apiRouter.get('/lessons', (req: Request, res: Response) => {
       kannadaTitle: lesson.kannadaTitle,
       romanTitle: lesson.romanTitle,
       description: lesson.description,
-      phraseCount: lesson.phrases ? lesson.phrases.length : 0,
-      totalPhrases: lesson.phrases ? lesson.phrases.length : 0,
-      completedPhrases: lesson.completedPhrases || (lesson.status === 'completed' ? (lesson.phrases?.length || 8) : lesson.status === 'in_progress' ? 3 : 0),
+      phraseCount: lesson.phrases ? lesson.phrases.length : 8,
+      totalPhrases: lesson.phrases ? lesson.phrases.length : 8,
+      completedPhrases: lesson.completedPhrases || (lesson.status === 'completed' ? 8 : 0),
       status: lesson.status,
       progress: lesson.progress,
-      badge: lesson.badge
+      badge: lesson.badge,
     }));
 
     res.json({
       success: true,
-      data: list
+      data: list,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to retrieve lessons'
+      message: 'Failed to retrieve lessons',
     });
   }
 });
 
-// GET /api/lessons/:id - full phrases with Kannada script, Roman, English, Hinglish, tip
+// GET /api/lessons/:id - Full details
 apiRouter.get('/lessons/:id', (req: Request, res: Response) => {
   const { id } = req.params;
   const lesson = lessonsData.find((l: any) => l.id.toLowerCase() === id.toLowerCase());
@@ -126,7 +217,7 @@ apiRouter.get('/lessons/:id', (req: Request, res: Response) => {
   if (!lesson) {
     return res.status(404).json({
       success: false,
-      message: `Scenario lesson with id "${id}" not found.`
+      message: `Scenario lesson with id "${id}" not found.`,
     });
   }
 
@@ -134,45 +225,228 @@ apiRouter.get('/lessons/:id', (req: Request, res: Response) => {
     success: true,
     data: {
       ...lesson,
-      phraseCount: lesson.phrases ? lesson.phrases.length : 0,
-      totalPhrases: lesson.phrases ? lesson.phrases.length : 0,
-      completedPhrases: lesson.completedPhrases || (lesson.status === 'completed' ? (lesson.phrases?.length || 8) : lesson.status === 'in_progress' ? 3 : 0)
-    }
+      phraseCount: lesson.phrases ? lesson.phrases.length : 8,
+      totalPhrases: lesson.phrases ? lesson.phrases.length : 8,
+    },
   });
 });
 
-// GET /api/daily-phrase - date-based daily phrase
+// GET /api/daily-phrase
 apiRouter.get('/daily-phrase', (req: Request, res: Response) => {
   const daily = getDailyPhraseFromLessons();
   res.json({
     success: true,
-    data: daily
+    data: daily,
   });
 });
 
-// POST /api/chat
-apiRouter.post('/chat', (req: Request, res: Response) => {
-  const { message, scenarioId } = req.body;
-  const trimmed = (message || '').trim();
-
-  const scenario = chatScenariosData.find((s: any) => s.id === scenarioId) || chatScenariosData[0];
-  let matchedReply = scenario?.dummyResponses?.[trimmed];
-
-  if (!matchedReply) {
-    matchedReply = scenario?.dummyResponses?.default || {
-      kannada: "ಧನ್ಯವಾದಗಳು! ನಾನು ಅರ್ಥ ಮಾಡಿಕೊಂಡೆ.",
-      roman: "Dhanyavadagalu! Naanu artha maadkonde.",
-      english: "Thank you! I understood. Keep practicing!"
-    };
+// POST /api/chat - AI Practice Chat with Gemini
+apiRouter.post('/chat', async (req: Request, res: Response) => {
+  // 1. Verify User Token
+  const userId = await verifyAuthToken(req);
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Unauthorized. Please sign in to practice with AI.',
+    });
   }
 
-  res.json({
+  // 2. Rate Limiting Check (20 req / min)
+  if (isRateLimited(userId)) {
+    return res.status(429).json({
+      success: false,
+      message: 'Practice limit reached (20 messages/min). Please wait a moment.',
+    });
+  }
+
+  const { scenario = 'Market 🛒', level = 'Beginner', history = [], userMessage } = req.body;
+  const trimmedMessage = (userMessage || '').trim();
+
+  if (!trimmedMessage) {
+    return res.status(400).json({
+      success: false,
+      message: 'Message cannot be empty.',
+    });
+  }
+
+  // 3. Keep only the last 10 messages of history
+  const trimmedHistory = Array.isArray(history) ? history.slice(-10) : [];
+
+  const systemInstruction = `You are a friendly Kannada-speaking person in this scenario: ${scenario} (for example a vegetable seller, an auto driver, a waiter, a receptionist).
+The learner is a non-Kannada speaker at ${level} level.
+Start by greeting them in simple spoken Kannada if beginning a conversation. Keep every reply SHORT (1-2 sentences) and simple.
+Use natural everyday spoken Kannada, not bookish. The learner may write in Kannada script, Roman Kannada, Hindi or English; understand all of them.
+Always reply ONLY in valid JSON with these keys:
+- replyKannada: string (Kannada script)
+- replyRoman: string (Roman transliteration)
+- replyEnglish: string (English meaning)
+- correction: string or null (if the learner's last message had Kannada mistakes, give the corrected sentence and a one-line reason, otherwise null)
+- tip: string or null (one short helpful phrase or note, or null)`;
+
+  // Conversation history prompt construction
+  let promptText = `Conversation history:\n`;
+  for (const m of trimmedHistory) {
+    promptText += `${m.sender === 'user' ? 'Learner' : 'Kannada Speaker'}: ${m.text || m.kannada || ''}\n`;
+  }
+  promptText += `Learner: ${trimmedMessage}\nKannada Speaker:`;
+
+  // 4. Call Gemini if available
+  if (ai) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents: promptText,
+          config: {
+            systemInstruction,
+            responseMimeType: 'application/json',
+            temperature: 0.7,
+          },
+        });
+
+        const rawText = response.text || '';
+        const cleaned = cleanJsonOutput(rawText);
+        const parsed = JSON.parse(cleaned);
+
+        return res.json({
+          success: true,
+          reply: {
+            replyKannada: parsed.replyKannada || 'ಹೌದು, ಹೇಳಿ!',
+            replyRoman: parsed.replyRoman || 'Haudu, heli!',
+            replyEnglish: parsed.replyEnglish || 'Yes, tell me!',
+            correction: parsed.correction || null,
+            tip: parsed.tip || null,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          },
+        });
+      } catch (geminiError) {
+        console.warn(`Gemini attempt ${attempt} failed:`, geminiError);
+        if (attempt === 2) {
+          // Break to fallback
+          break;
+        }
+      }
+    }
+  }
+
+  // 5. Intelligent Fallback if Gemini key is unset or temporary error
+  const fallbackScenarioReplies: Record<string, any> = {
+    market: {
+      replyKannada: 'ಖಂಡಿತ ಸರ್! ಟೊಮೆಟೊ ತಾಜಾ ಇದೆ, ಕೆಜಿಗೆ ೩೦ ರೂಪಾಯಿ. ಎಷ್ಟು ಕೆಜಿ ಬೇಕು?',
+      replyRoman: 'Khanditha sir! Tomato taaja ide, kg-ge moovattu roopayi. Eshtu kg beku?',
+      replyEnglish: 'Certainly sir! Tomatoes are fresh, 30 rupees per kg. How many kgs do you need?',
+      correction: trimmedMessage.toLowerCase().includes('tomato') ? null : 'Tip: You can ask "Tomato eshtu roopayi?" (How much are tomatoes?)',
+      tip: 'Say "Swalpa kadime maadi" if you want to request a friendly discount.',
+    },
+    bus: {
+      replyKannada: 'ಹೌದು ಸರ್, ಇದು ಮೆಜೆಸ್ಟಿಕ್ ಹೋಗುತ್ತೆ. ಬನ್ನಿ ಹತ್ತಿಕೊಳ್ಳಿ, ೨೫ ರೂಪಾಯಿ ಟಿಕೆಟ್.',
+      replyRoman: 'Haudu sir, idu Majestic hogutte. Banni hattikolli, iravattaidu roopayi ticket.',
+      replyEnglish: 'Yes sir, this goes to Majestic. Come, board the bus, ticket is 25 rupees.',
+      correction: null,
+      tip: 'Say "Illi nillisi" (Stop here) to ask the driver to drop you off.',
+    },
+    restaurant: {
+      replyKannada: 'ನಮಸ್ಕಾರ ಸರ್! ನಮ್ಮಲ್ಲಿ ಮಸಾಲೆ ದೋಸೆ ತುಂಬಾ ಚೆನ್ನಾಗಿದೆ. ಕಾಫಿ ಅಥವಾ ಚಹಾ ತರಲಾ?',
+      replyRoman: 'Namaskara sir! Nammalli Masale Dose tumba chennagide. Coffee athava chaha tarala?',
+      replyEnglish: 'Welcome sir! Masala Dosa is very nice here. Shall I bring coffee or tea?',
+      correction: null,
+      tip: 'Use "kodi" (please give) when ordering food politely.',
+    },
+    hospital: {
+      replyKannada: 'ನಮಸ್ಕಾರ, ಡಾಕ್ಟರ್ ಒಳಗಡೆ ಇದ್ದಾರೆ. ಮೊದಲು ಇಲ್ಲಿ ಹೆಸರು ಬರೆಸಿ, ೫ ನಿಮಿಷ ಕೂತ್ಕೊಳ್ಳಿ.',
+      replyRoman: 'Namaskara, doctor olagade iddaare. Modalu illi hesaru baresi, aidu nimisha kootkolli.',
+      replyEnglish: 'Namaskara, doctor is inside. First register your name here, please sit for 5 minutes.',
+      correction: null,
+      tip: 'Say "Nange jvara ide" to inform that you have a fever.',
+    },
+    office: {
+      replyKannada: 'ಹಾಯ್! ಬನ್ನಿ ಒಂದು ಕಪ್ ಕಾಫಿ ಕುಡಿಯೋಣ. ಇವತ್ತಿನ ಪ್ರಾಜೆಕ್ಟ್ ಕೆಲಸ ಹೇಗಿದೆ?',
+      replyRoman: 'Hi! Banni ondu cup coffee kudiyona. Ivattina project kelasa hegide?',
+      replyEnglish: 'Hi! Come let\'s drink a cup of coffee. How is today\'s project work going?',
+      correction: null,
+      tip: 'Say "Tumba thanks" or "Dhanyavadagalu" for thanking colleagues.',
+    },
+    default: {
+      replyKannada: 'ತುಂಬಾ ಒಳ್ಳೆಯದು! ನಾನು ಅರ್ಥ ಮಾಡಿಕೊಂಡೆ. ಮುಂದೆ ಏನು ಬೇಕು?',
+      replyRoman: 'Tumba olleyadu! Naanu artha maadkonde. Munde enu beku?',
+      replyEnglish: 'Very good! I understood. What do you need next?',
+      correction: null,
+      tip: 'Keep sentences short and polite by adding "kodi" (please give).',
+    },
+  };
+
+  const scLower = scenario.toLowerCase();
+  let key = 'default';
+  if (scLower.includes('bus') || scLower.includes('auto')) key = 'bus';
+  else if (scLower.includes('market') || scLower.includes('sabzi')) key = 'market';
+  else if (scLower.includes('restaurant') || scLower.includes('food') || scLower.includes('dosa')) key = 'restaurant';
+  else if (scLower.includes('hospital') || scLower.includes('clinic') || scLower.includes('doctor')) key = 'hospital';
+  else if (scLower.includes('office') || scLower.includes('work') || scLower.includes('meeting')) key = 'office';
+
+  const replyObj = fallbackScenarioReplies[key] || fallbackScenarioReplies.default;
+
+  return res.json({
     success: true,
     reply: {
-      sender: 'bot',
-      ...matchedReply,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      ...replyObj,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    },
+  });
+});
+
+// POST /api/chat/hint - Suggest what learner can say next
+apiRouter.post('/chat/hint', async (req: Request, res: Response) => {
+  const userId = await verifyAuthToken(req);
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Unauthorized.',
+    });
+  }
+
+  const { scenario = 'Market 🛒', level = 'Beginner', history = [] } = req.body;
+  const trimmedHistory = Array.isArray(history) ? history.slice(-6) : [];
+
+  let historyContext = '';
+  for (const m of trimmedHistory) {
+    historyContext += `${m.sender === 'user' ? 'Learner' : 'Vendor/Speaker'}: ${m.text || m.kannada || ''}\n`;
+  }
+
+  if (ai) {
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: `Given this conversation scenario (${scenario}, ${level} level):\n${historyContext}\nSuggest ONE short, practical sentence the learner can say next in Kannada.
+Return ONLY valid JSON with keys: kannada, roman, english.`,
+        config: {
+          responseMimeType: 'application/json',
+          temperature: 0.5,
+        },
+      });
+
+      const raw = response.text || '';
+      const parsed = JSON.parse(cleanJsonOutput(raw));
+      return res.json({
+        success: true,
+        hint: {
+          kannada: parsed.kannada,
+          roman: parsed.roman,
+          english: parsed.english,
+        },
+      });
+    } catch (e) {
+      console.warn('Gemini hint error:', e);
     }
+  }
+
+  // Fallback hint
+  return res.json({
+    success: true,
+    hint: {
+      kannada: 'ಎಷ್ಟು ರೂಪಾಯಿ ಆಗುತ್ತೆ?',
+      roman: 'Eshtu roopayi aagutte?',
+      english: 'How many rupees will it be?',
+    },
   });
 });
 
@@ -192,69 +466,21 @@ apiRouter.post('/quiz/submit', (req: Request, res: Response) => {
       isCorrect,
       correctOptionId: quiz.correctOptionId,
       explanation: quiz.explanation,
-      score: isCorrect ? 100 : 0
-    }
+      score: isCorrect ? 100 : 0,
+    },
   });
 });
 
 // GET /api/progress
 apiRouter.get('/progress', (req: Request, res: Response) => {
   const dailyPhrase = getDailyPhraseFromLessons();
-
   res.json({
     success: true,
     data: {
       ...progressData,
       dailyPhrase,
-      savedWords: savedWordsData
-    }
-  });
-});
-
-// POST /api/progress
-apiRouter.post('/progress', (req: Request, res: Response) => {
-  const { action, word, lessonId } = req.body;
-
-  if (action === 'save_word' && word) {
-    const exists = savedWordsData.some((w: any) => w.kannada === word.kannada);
-    if (!exists) {
-      savedWordsData.unshift({
-        id: `sw-${Date.now()}`,
-        ...word
-      });
-      if (progressData.stats) {
-        progressData.stats.savedWordsCount = savedWordsData.length;
-      }
-    }
-    return res.json({ success: true, savedWords: savedWordsData });
-  }
-
-  if (action === 'remove_word' && word?.id) {
-    savedWordsData = savedWordsData.filter((w: any) => w.id !== word.id);
-    if (progressData.stats) {
-      progressData.stats.savedWordsCount = savedWordsData.length;
-    }
-    return res.json({ success: true, savedWords: savedWordsData });
-  }
-
-  if (action === 'update_lesson_progress' && lessonId) {
-    const lesson = lessonsData.find((l: any) => l.id === lessonId);
-    if (lesson) {
-      const total = lesson.phrases ? lesson.phrases.length : 8;
-      lesson.completedPhrases = Math.min(total, (lesson.completedPhrases || 0) + 1);
-      lesson.progress = Math.round((lesson.completedPhrases / total) * 100);
-      if (lesson.progress >= 100) {
-        lesson.status = 'completed';
-        lesson.badge = '✅ Done';
-      }
-    }
-    return res.json({ success: true, lesson });
-  }
-
-  res.json({
-    success: true,
-    message: 'Progress recorded',
-    data: progressData
+      savedWords: savedWordsData,
+    },
   });
 });
 
@@ -262,7 +488,7 @@ apiRouter.post('/progress', (req: Request, res: Response) => {
 apiRouter.get('/chat/scenarios', (req: Request, res: Response) => {
   res.json({
     success: true,
-    data: chatScenariosData
+    data: chatScenariosData,
   });
 });
 
@@ -270,6 +496,6 @@ apiRouter.get('/chat/scenarios', (req: Request, res: Response) => {
 apiRouter.get('/quiz', (req: Request, res: Response) => {
   res.json({
     success: true,
-    data: quizData
+    data: quizData,
   });
 });

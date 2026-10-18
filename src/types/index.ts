@@ -94,12 +94,15 @@ export interface ChatMessage {
   kannada: string;
   roman?: string;
   english?: string;
+  correction?: string | null;
+  tip?: string | null;
   timestamp: string;
 }
 
 export interface ChatScenario {
   id: string;
   title: string;
+  emoji?: string;
   kannadaTitle: string;
   category: string;
   vendorName: string;
@@ -112,12 +115,18 @@ export interface ChatScenario {
     english: string;
     timestamp: string;
   };
-  quickReplies: Array<{
+  starterSuggestions?: Array<{
+    label: string;
     kannada: string;
     roman: string;
     english: string;
   }>;
-  dummyResponses: Record<string, {
+  quickReplies?: Array<{
+    kannada: string;
+    roman: string;
+    english: string;
+  }>;
+  dummyResponses?: Record<string, {
     kannada: string;
     roman: string;
     english: string;

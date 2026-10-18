@@ -2,12 +2,9 @@ import {
   collection,
   doc,
   getDoc,
-  getDocs,
   setDoc,
   deleteDoc,
   updateDoc,
-  query,
-  orderBy,
   onSnapshot
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
@@ -25,6 +22,14 @@ export interface QuizRecord {
   lessonId: string;
   score: number;
   total: number;
+  date: string;
+}
+
+export interface PracticeSessionRecord {
+  id?: string;
+  scenario: string;
+  level: 'Beginner' | 'Intermediate';
+  messageCount: number;
   date: string;
 }
 
@@ -259,6 +264,68 @@ export const firestoreService = {
           });
         });
         onUpdate(records);
+      },
+      (error) => {
+        if (onError) onError(error);
+        handleFirestoreError(error, OperationType.GET, colPath);
+      }
+    );
+  },
+
+  // Record a practice session (>= 3 messages)
+  async recordPracticeSession(
+    uid: string,
+    session: { scenario: string; level: 'Beginner' | 'Intermediate'; messageCount: number }
+  ) {
+    const colPath = `users/${uid}/practiceSessions`;
+    const newDocRef = doc(collection(db, 'users', uid, 'practiceSessions'));
+
+    const todayDateStr = new Date().toISOString().split('T')[0];
+
+    try {
+      await setDoc(newDocRef, {
+        scenario: session.scenario,
+        level: session.level,
+        messageCount: session.messageCount,
+        date: new Date().toISOString(),
+      });
+
+      // Update user lastActiveDate
+      const userRef = doc(db, 'users', uid);
+      await updateDoc(userRef, {
+        lastActiveDate: todayDateStr,
+      });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, colPath);
+    }
+  },
+
+  // Subscribe to practice sessions
+  subscribePracticeSessions(
+    uid: string,
+    onUpdate: (sessions: PracticeSessionRecord[]) => void,
+    onError?: (err: any) => void
+  ) {
+    const colPath = `users/${uid}/practiceSessions`;
+    const colRef = collection(db, 'users', uid, 'practiceSessions');
+
+    return onSnapshot(
+      colRef,
+      (snapshot) => {
+        const list: PracticeSessionRecord[] = [];
+        snapshot.forEach((d) => {
+          const data = d.data();
+          list.push({
+            id: d.id,
+            scenario: data.scenario,
+            level: data.level,
+            messageCount: data.messageCount,
+            date: data.date,
+          });
+        });
+        // Sort descending by date
+        list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        onUpdate(list);
       },
       (error) => {
         if (onError) onError(error);

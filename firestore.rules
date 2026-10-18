@@ -33,6 +33,11 @@ service cloud.firestore {
       match /quizResults/{resultId} {
         allow read, write: if isOwner(userId);
       }
+
+      // Practice Sessions subcollection
+      match /practiceSessions/{sessionId} {
+        allow read, write: if isOwner(userId);
+      }
     }
   }
 }

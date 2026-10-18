@@ -1,12 +1,13 @@
 [
   {
     "id": "market-chat",
-    "title": "Sabzi wale se baat karo",
-    "kannadaTitle": "ತರಕಾರಿ ವ್ಯಾಪಾರಿಯೊಂದಿಗೆ ಮಾತುಕತೆ",
+    "title": "Market",
+    "emoji": "🛒",
+    "kannadaTitle": "ತರಕಾರಿ ಮಾರುಕಟ್ಟೆ",
     "category": "Market & Groceries",
     "vendorName": "ಮಂಜುನಾಥ್ (Manjunath)",
-    "vendorRole": "ತರಕಾರಿ ಅಂಗಡಿ ವ್ಯಾಪಾರಿ (Vegetable Vendor)",
-    "description": "Practice bargaining and buying fresh vegetables in Bangalore markets.",
+    "vendorRole": "ತರಕಾರಿ ವ್ಯಾಪಾರಿ · Vegetable Vendor",
+    "description": "Bargain for fresh vegetables, ask prices, and purchase groceries.",
     "initialMessage": {
       "sender": "bot",
       "kannada": "ಬನ್ನಿ ಸರ್! ನಮಸ್ಕಾರ, ಇವತ್ತು ತಾಜಾ ತರಕಾರಿ ಬಂದಿದೆ. ಏನು ಬೇಕು?",
@@ -14,6 +15,26 @@
       "english": "Welcome sir! Namaskara, fresh vegetables arrived today. What do you need?",
       "timestamp": "10:00 AM"
     },
+    "starterSuggestions": [
+      {
+        "label": "Tomato eshtu?",
+        "kannada": "ಟೊಮೆಟೊ ಎಷ್ಟು ರೂಪಾಯಿ?",
+        "roman": "Tomato eshtu roopayi?",
+        "english": "How much are the tomatoes?"
+      },
+      {
+        "label": "1 kg kodi",
+        "kannada": "ಒಂದು ಕೆಜಿ ಆಲೂಗಡ್ಡೆ ಕೊಡಿ",
+        "roman": "Ondu kg aaloogadde kodi",
+        "english": "Give 1 kg potatoes please"
+      },
+      {
+        "label": "Kadime maadi",
+        "kannada": "ಸ್ವಲ್ಪ ಕಡಿಮೆ ಮಾಡಿ",
+        "roman": "Swalpa kadime maadi",
+        "english": "Please reduce a little"
+      }
+    ],
     "quickReplies": [
       {
         "kannada": "ಟೊಮೆಟೊ ಎಷ್ಟು ರೂಪಾಯಿ?",
@@ -29,56 +50,45 @@
         "kannada": "ಸ್ವಲ್ಪ ಕಡಿಮೆ ಮಾಡಿ",
         "roman": "Swalpa kadime maadi",
         "english": "Please reduce a little"
-      },
-      {
-        "kannada": "ಒಟ್ಟು ಎಷ್ಟು ಆಯ್ತು?",
-        "roman": "Ottu eshtu aaytu?",
-        "english": "What is the total amount?"
       }
-    ],
-    "dummyResponses": {
-      "ಟೊಮೆಟೊ ಎಷ್ಟು ರೂಪಾಯಿ?": {
-        "kannada": "ಟೊಮೆಟೊ ಕೆಜಿಗೆ ೩೦ ರೂಪಾಯಿ ಸರ್. ತುಂಬಾ ತಾಜಾ ಇದೆ!",
-        "roman": "Tomato kg-ge moovattu roopayi sir. Tumba taaja ide!",
-        "english": "Tomatoes are 30 rupees per kilo sir. Very fresh!"
-      },
-      "ಒಂದು ಕೆಜಿ ಆಲೂಗಡ್ಡೆ ಕೊಡಿ": {
-        "kannada": "ಖಂಡಿತ ಸರ್, ತಗೊಳ್ಳಿ. ಇನ್ನೇನು ಬೇಕು?",
-        "roman": "Khanditha sir, tagolli. Innenoo beku?",
-        "english": "Certainly sir, please take. What else do you need?"
-      },
-      "ಸ್ವಲ್ಪ ಕಡಿಮೆ ಮಾಡಿ": {
-        "kannada": "ಸರಿ ಸರ್, ನಿಮಗೋಸ್ಕರ ೫ ರೂಪಾಯಿ ಕಡಿಮೆ ಮಾಡ್ತೀನಿ. ತಗೊಳ್ಳಿ!",
-        "roman": "Sari sir, nimgoskara aidu roopayi kadime maadtini. Tagolli!",
-        "english": "Okay sir, for you I will reduce 5 rupees. Please take!"
-      },
-      "ಒಟ್ಟು ಎಷ್ಟು ಆಯ್ತು?": {
-        "kannada": "ಒಟ್ಟು ೬೫ ರೂಪಾಯಿ ಆಯ್ತು ಸರ್. Google Pay ಇದೆಯಾ?",
-        "roman": "Ottu aravattaidu roopayi aaytu sir. Google Pay ideya?",
-        "english": "Total is 65 rupees sir. Do you have Google Pay?"
-      },
-      "default": {
-        "kannada": "ತುಂಬಾ ಒಳ್ಳೆಯದು! ಬೇರೆ ಏನಾದರೂ ಸಹಾಯ ಬೇಕಾ?",
-        "roman": "Tumba olleyadu! Bere enaadaru sahaya beka?",
-        "english": "Very good! Do you need any other help?"
-      }
-    }
+    ]
   },
   {
-    "id": "auto-chat",
-    "title": "Auto driver se baat karo",
-    "kannadaTitle": "ಆಟೋ ಚಾಲಕರೊಂದಿಗೆ ಮಾತುಕತೆ",
+    "id": "bus-chat",
+    "title": "Bus / Auto",
+    "emoji": "🚌",
+    "kannadaTitle": "ಬಸ್ ಮತ್ತು ಆಟೋ ಪ್ರಯಾಣ",
     "category": "Travel & Commute",
     "vendorName": "ರವಿಕುಮಾರ್ (Ravikumar)",
-    "vendorRole": "ಆಟೋ ಚಾಲಕ (Auto Driver)",
-    "description": "Request meter, ask direction, and pay auto fare smoothly.",
+    "vendorRole": "ಆಟೋ ಚಾಲಕ · Auto Driver",
+    "description": "Request meter, ask fare, give directions, and navigate Bangalore commutes.",
     "initialMessage": {
       "sender": "bot",
-      "kannada": "ಹಲೋ ಬಾಸ್, ಎಲ್ಲಿಗೆ ಹೋಗ್ಬೇಕು?",
-      "roman": "Hello boss, ellige hogbeku?",
-      "english": "Hello boss, where do you want to go?",
+      "kannada": "ಹಲೋ ಸರ್, ಎಲ್ಲಿಗೆ ಹೋಗ್ಬೇಕು? ಬನ್ನಿ ಹತ್ತಿಕೊಳ್ಳಿ.",
+      "roman": "Hello sir, ellige hogbeku? Banni hattikolli.",
+      "english": "Hello sir, where do you need to go? Hop in.",
       "timestamp": "10:15 AM"
     },
+    "starterSuggestions": [
+      {
+        "label": "Indiranagar-kke hoguttaa?",
+        "kannada": "ಇಂದಿರಾನಗರಕ್ಕೆ ಹೋಗುತ್ತಾ?",
+        "roman": "Indiranagar-kke hoguttaa?",
+        "english": "Will you go to Indiranagar?"
+      },
+      {
+        "label": "Meter haaki banni",
+        "kannada": "ಮೀಟರ್ ಹಾಕಿ ಬನ್ನಿ",
+        "roman": "Meter haaki banni",
+        "english": "Please put meter and come"
+      },
+      {
+        "label": "Eshtu roopayi?",
+        "kannada": "ಎಷ್ಟು ರೂಪಾಯಿ ಆಗುತ್ತೆ?",
+        "roman": "Eshtu roopayi aagutte?",
+        "english": "How many rupees will it be?"
+      }
+    ],
     "quickReplies": [
       {
         "kannada": "ಇಂದಿರಾನಗರಕ್ಕೆ ಹೋಗುತ್ತಾ?",
@@ -95,23 +105,168 @@
         "roman": "Eshtu roopayi aagutte?",
         "english": "How many rupees will it be?"
       }
-    ],
-    "dummyResponses": {
-      "ಇಂದಿರಾನಗರಕ್ಕೆ ಹೋಗುತ್ತಾ?": {
-        "kannada": "ಹೌದು, ಬನ್ನಿ ಕೂತ್ಕೊಳ್ಳಿ. ಮೆಟ್ರೋ ಸ್ಟೇಷನ್ ಹತ್ತಿರನಾ?",
-        "roman": "Haudu, banni kootkolli. Metro station hattirana?",
-        "english": "Yes, come sit. Near metro station?"
+    ]
+  },
+  {
+    "id": "restaurant-chat",
+    "title": "Restaurant",
+    "emoji": "🍛",
+    "kannadaTitle": "ಹೋಟೆಲ್ / ದೋಸೆ ಕ್ಯಾಂಪ್",
+    "category": "Food & Dining",
+    "vendorName": "ಸುರೇಶ್ (Suresh)",
+    "vendorRole": "ದೋಸೆ ಕ್ಯಾಂಪ್ ವೇಟರ್ · Darshini Waiter",
+    "description": "Order hot breakfast, ask for extra chutney or coffee, and pay your bill.",
+    "initialMessage": {
+      "sender": "bot",
+      "kannada": "ನಮಸ್ಕಾರ ಸರ್, ಕೂತ್ಕೊಳ್ಳಿ! ತಿಂಡಿಗೆ ಏನು ತರಲಿ? ಮಸಾಲೆ ದೋಸೆ, ಇಡ್ಲಿ-ವಡೆ ರೆಡಿ ಇದೆ.",
+      "roman": "Namaskara sir, kootkolli! Thindige enu tarali? Masale dose, idli-vade ready ide.",
+      "english": "Welcome sir, please sit! What should I bring? Masala dosa, idli-vada is ready.",
+      "timestamp": "08:30 AM"
+    },
+    "starterSuggestions": [
+      {
+        "label": "Ondu Masale Dose kodi",
+        "kannada": "ಒಂದು ಮಸಾಲೆ ದೋಸೆ ಕೊಡಿ",
+        "roman": "Ondu Masale Dose kodi",
+        "english": "Give 1 Masala Dosa please"
       },
-      "ಮೀಟರ್ ಹಾಕಿ ಬನ್ನಿ": {
-        "kannada": "ಸರಿ ಸರ್, ಮೀಟರ್ ಹಾಕ್ತೀನಿ. ಬನ್ನಿ.",
-        "roman": "Sari sir, meter haaktini. Banni.",
-        "english": "Okay sir, I'll put the meter. Hop in."
+      {
+        "label": "Bisi neeru beku",
+        "kannada": "ಬಿಸಿ ನೀರು ಬೇಕು",
+        "roman": "Bisi neeru beku",
+        "english": "Need hot drinking water"
       },
-      "default": {
-        "kannada": "ಸರಿ ಸರ್, ಮುಂದೆ ಬಲಗಡೆ ತಿರುಗಿಸಬೇಕಾ?",
-        "roman": "Sari sir, munde balagade tirugisabeka?",
-        "english": "Okay sir, should I turn right ahead?"
+      {
+        "label": "Bill kodi",
+        "kannada": "ಬಿಲ್ ಕೊಡಿ",
+        "roman": "Bill kodi",
+        "english": "Please give the bill"
       }
-    }
+    ],
+    "quickReplies": [
+      {
+        "kannada": "ಒಂದು ಮಸಾಲೆ ದೋಸೆ ಕೊಡಿ",
+        "roman": "Ondu Masale Dose kodi",
+        "english": "Give 1 Masala Dosa please"
+      },
+      {
+        "kannada": "ಬಿಸಿ ನೀರು ಬೇಕು",
+        "roman": "Bisi neeru beku",
+        "english": "Need hot drinking water"
+      },
+      {
+        "kannada": "ಬಿಲ್ ಕೊಡಿ",
+        "roman": "Bill kodi",
+        "english": "Please give the bill"
+      }
+    ]
+  },
+  {
+    "id": "hospital-chat",
+    "title": "Hospital",
+    "emoji": "🏥",
+    "kannadaTitle": "ಆಸ್ಪತ್ರೆ ಮತ್ತು ಕ್ಲಿನಿಕ್",
+    "category": "Health & Medical",
+    "vendorName": "ಪ್ರಿಯಾ (Priya)",
+    "vendorRole": "ಕ್ಲಿನಿಕ್ ರಿಸೆಪ್ಷನಿಸ್ಟ್ · Clinic Receptionist",
+    "description": "Book doctor consultations, express basic health symptoms, and purchase medicines.",
+    "initialMessage": {
+      "sender": "bot",
+      "kannada": "ನಮಸ್ಕಾರ, ಕ್ಲಿನಿಕ್‌ಗೆ ಸ್ವಾಗತ. ಡಾಕ್ಟರ್ ಅಪಾಯಿಂಟ್ಮೆಂಟ್ ಬೇಕಾ? ನಿಮ್ಮ ಹೆಸರು ಏನು?",
+      "roman": "Namaskara, clinic-ge swagatha. Doctor appointment beka? Nimma hesaru enu?",
+      "english": "Namaskara, welcome to clinic. Do you need doctor appointment? What is your name?",
+      "timestamp": "11:00 AM"
+    },
+    "starterSuggestions": [
+      {
+        "label": "Doctor iddaara?",
+        "kannada": "ಡಾಕ್ಟರ್ ಇದ್ದಾರಾ?",
+        "roman": "Doctor iddaara?",
+        "english": "Is the doctor available?"
+      },
+      {
+        "label": "Nange jvara ide",
+        "kannada": "ನನಗೆ ಜ್ವರ ಇದೆ",
+        "roman": "Nange jvara ide",
+        "english": "I have fever"
+      },
+      {
+        "label": "Appointment beku",
+        "kannada": "ಅಪಾಯಿಂಟ್ಮೆಂಟ್ ಬೇಕು",
+        "roman": "Appointment beku",
+        "english": "I need an appointment"
+      }
+    ],
+    "quickReplies": [
+      {
+        "kannada": "ಡಾಕ್ಟರ್ ಇದ್ದಾರಾ?",
+        "roman": "Doctor iddaara?",
+        "english": "Is the doctor available?"
+      },
+      {
+        "kannada": "ನನಗೆ ಜ್ವರ ಇದೆ",
+        "roman": "Nange jvara ide",
+        "english": "I have fever"
+      },
+      {
+        "kannada": "ಅಪಾಯಿಂಟ್ಮೆಂಟ್ ಬೇಕು",
+        "roman": "Appointment beku",
+        "english": "I need an appointment"
+      }
+    ]
+  },
+  {
+    "id": "office-chat",
+    "title": "Office",
+    "emoji": "💼",
+    "kannadaTitle": "ಕಚೇರಿ ಸಂಭಾಷಣೆ",
+    "category": "Work & Professional",
+    "vendorName": "ರೋಹಿತ್ (Rohit)",
+    "vendorRole": "ಆಫೀಸ್ ಸಹೋದ್ಯೋಗಿ · Colleague",
+    "description": "Connect with colleagues, take tea breaks, and manage daily workplace discussions.",
+    "initialMessage": {
+      "sender": "bot",
+      "kannada": "ಹಾಯ್! ಬನ್ನಿ ಕಾಫಿ ಕುಡಿಯೋಣ. ಇವತ್ತಿನ ಮೀಟಿಂಗ್ ರೆಡಿ ಇದೆಯಾ?",
+      "roman": "Hi! Banni coffee kudiyona. Ivattina meeting ready ideya?",
+      "english": "Hi! Come let's drink coffee. Is today's meeting ready?",
+      "timestamp": "03:15 PM"
+    },
+    "starterSuggestions": [
+      {
+        "label": "Coffee kudiyona banni",
+        "kannada": "ಕಾಫಿ ಕುಡಿಯೋಣ ಬನ್ನಿ",
+        "roman": "Coffee kudiyona banni",
+        "english": "Come let's drink coffee"
+      },
+      {
+        "label": "Meeting start aayta?",
+        "kannada": "ಮೀಟಿಂಗ್ ಶುರು ಆಯ್ತಾ?",
+        "roman": "Meeting shuru aayta?",
+        "english": "Did meeting start?"
+      },
+      {
+        "label": "Nale sigona",
+        "kannada": "ನಾಳೆ ಸಿಗೋಣ",
+        "roman": "Nale sigona",
+        "english": "See you tomorrow"
+      }
+    ],
+    "quickReplies": [
+      {
+        "kannada": "ಕಾಫಿ ಕುಡಿಯೋಣ ಬನ್ನಿ",
+        "roman": "Coffee kudiyona banni",
+        "english": "Come let's drink coffee"
+      },
+      {
+        "kannada": "ಮೀಟಿಂಗ್ ಶುರು ಆಯ್ತಾ?",
+        "roman": "Meeting shuru aayta?",
+        "english": "Did meeting start?"
+      },
+      {
+        "kannada": "ನಾಳೆ ಸಿಗೋಣ",
+        "roman": "Nale sigona",
+        "english": "See you tomorrow"
+      }
+    ]
   }
 ]
