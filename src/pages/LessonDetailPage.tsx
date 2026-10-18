@@ -189,6 +189,40 @@ export const LessonDetailPage: React.FC<LessonDetailPageProps> = ({
         </div>
       ) : null}
 
+      {/* Celebratory Completion Banner */}
+      {isDone && lesson && (
+        <div className="bg-gradient-to-r from-amber-50 via-emerald-50 to-amber-50 rounded-2xl p-4 sm:p-5 border-2 border-emerald-400 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 success-pop">
+          <div className="flex items-center gap-3 text-center sm:text-left">
+            <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-2xl shrink-0 shadow-xs">
+              🏆
+            </div>
+            <div>
+              <div className="flex items-center justify-center sm:justify-start gap-2">
+                <h3 className="font-extrabold text-sm sm:text-base text-emerald-950">
+                  ಅಭಿನಂದನೆಗಳು! All Phrases Mastered!
+                </h3>
+                <span className="text-xs bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded-full">
+                  100%
+                </span>
+              </div>
+              <p className="text-xs text-emerald-800 mt-0.5 leading-relaxed">
+                You have marked all 8 scenario phrases as learned. Take the quiz now to test your recall and unlock the next scenario!
+              </p>
+            </div>
+          </div>
+          {onTakeQuiz && (
+            <button
+              onClick={() => onTakeQuiz(lesson.id)}
+              className="w-full sm:w-auto min-h-[44px] px-5 rounded-[10px] bg-[#B71C1C] text-white hover:bg-[#8F1414] text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs shrink-0 active:scale-95 transition-all"
+              aria-label={`Take quiz for ${lesson.title}`}
+            >
+              <Award size={16} />
+              <span>Take Scenario Quiz</span>
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Phrase Cards */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">

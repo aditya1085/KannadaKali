@@ -11,7 +11,9 @@ import { LessonDetailPage } from './pages/LessonDetailPage';
 import { PracticeChatPage } from './pages/PracticeChatPage';
 import { QuizPage } from './pages/QuizPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { AboutPage } from './pages/AboutPage';
 import { LoginPage } from './pages/LoginPage';
+import { Footer } from './components/Footer';
 import { VoiceNoticeBanner } from './components/VoiceNoticeBanner';
 import { Lesson, SavedWord, UserProfile, UserStats, WeeklyDayActivity, DailyPhrase, Phrase } from './types';
 import { api } from './services/api';
@@ -361,7 +363,7 @@ export default function App() {
       />
 
       {/* Main Content Area - max 1200px centered */}
-      <main className="flex-1 max-w-[1200px] w-full mx-auto px-4 pt-6 pb-20 md:pb-12">
+      <main key={activeTab} className="flex-1 max-w-[1200px] w-full mx-auto px-4 pt-6 pb-20 md:pb-12 page-transition">
         {activeTab === 'home' && (
           <HomePage
             userName={firstName}
@@ -447,7 +449,30 @@ export default function App() {
             onVoiceMissing={() => setShowVoiceNotice(true)}
           />
         )}
+
+        {activeTab === 'about' && (
+          <AboutPage
+            onBackToHome={() => {
+              setActiveTab('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onNavigateToTab={(tab) => {
+              setActiveTab(tab);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        )}
       </main>
+
+      {/* Global Footer */}
+      <Footer
+        onNavigate={(tab) => {
+          if (tab === 'quiz') setSelectedQuizLessonId(null);
+          setActiveTab(tab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        activeTab={activeTab}
+      />
 
       {/* Toast Notification */}
       {toastMessage && (

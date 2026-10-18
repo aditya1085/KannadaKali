@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, BookOpen, MessageSquare, Award, User, LogOut } from 'lucide-react';
+import { Home, BookOpen, MessageSquare, Award, User, LogOut, Info } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: string;
@@ -25,6 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'lessons', label: 'Lessons', icon: BookOpen },
     { id: 'practice', label: 'Practice', icon: MessageSquare },
     { id: 'quiz', label: 'Quiz', icon: Award },
+    { id: 'about', label: 'About', icon: Info },
   ];
 
   const mobileNavItems = [
@@ -78,7 +79,21 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* Right: Round avatar / Google Photo + User name + Logout button */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Mobile About button */}
+            <button
+              onClick={() => onNavigate('about')}
+              className={`md:hidden p-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'about'
+                  ? 'bg-[#B71C1C] text-white shadow-xs'
+                  : 'text-[#B71C1C] hover:bg-[#FFE082]'
+              }`}
+              title="About KannadaKali"
+              aria-label="About KannadaKali"
+            >
+              <Info size={18} />
+            </button>
+
             <button
               onClick={() => onNavigate('profile')}
               className={`flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-full transition-all duration-150 ${
@@ -87,6 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   : 'hover:bg-[#FFE082]'
               }`}
               title="View Profile"
+              aria-label="View Profile"
             >
               {photoURL && !imgError ? (
                 <img
