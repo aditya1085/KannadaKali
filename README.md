@@ -1,11 +1,44 @@
-<div align="center">
+# KannadaKali (ಕನ್ನಡ ಕಲಿ) 🪔
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+A modern, practical Kannada learning platform designed specifically for non-Kannada speakers to master everyday conversational Kannada through real-world scenarios.
 
-  <h1>Built with AI Studio</h2>
+## Features Implemented
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+### Step 3: Real Authentication & Firestore Database
+- **Firebase Authentication (Google Sign-In)**:
+  - Clean branded `LoginPage` styled in the KannadaKali theme with 🪔 logo and "Sign in with Google" button.
+  - Protected routes: Unauthenticated visitors are automatically directed to Login.
+  - Real user Google profile photo and first name displayed in the Navbar and greeting (`🙏 Namaskara, <Name>!`).
+  - One-click Logout action in Navbar and Profile page.
+- **Firestore Collections & Real Data**:
+  - `users/{uid}`: Profile details, real daily streak, and last active timestamp.
+  - `users/{uid}/progress/{lessonId}`: Real completion array and scenario status (`in_progress`, `done`, `locked`).
+  - `users/{uid}/savedWords/{phraseId}`: Real personal saved vocabulary bank with instant bookmark/remove.
+  - `users/{uid}/quizResults/{autoId}`: Real quiz attempts, calculating genuine average accuracy.
+- **Zero Dummy Numbers & Real-Time Sync**:
+  - On first sign-in, the user document and Market scenario are unlocked; all other scenarios start locked.
+  - Completing all 8 phrases in a scenario automatically marks it `done` and unlocks the next scenario.
+  - Real dashboard stats (0 values and friendly empty states like *"No saved words yet"* for new learners).
+  - Dynamic weekly activity bar chart reflecting real practice.
+- **Hardened Security Rules (`firestore.rules`)**:
+  - Users can read and write exclusively their own documents and subcollections (`request.auth.uid == userId`). Default-deny for all other access.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+### Manual Setup Steps (if needed)
 
-</div>
+If Google Sign-In gives a configuration popup error on first click:
+1. Open the [Firebase Console](https://console.firebase.google.com/project/wired-space-nmn89/authentication/providers).
+2. Go to **Authentication > Sign-in method**:
+   - Ensure **Google** is enabled.
+   - Verify a project support email is selected.
+3. In **Authentication > Settings > Authorized domains**:
+   - Verify that your applet domain (`*.run.app`) is listed in the authorized domains list.
+
+## Running the App
+
+```bash
+# Development (Express + Vite on port 3000)
+npm run dev
+
+# Build
+npm run build
+```

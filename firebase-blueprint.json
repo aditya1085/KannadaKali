@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile with learning streak and activity tracking",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 150 },
+        "email": { "type": "string", "format": "email", "maxLength": 150 },
+        "photoURL": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string" },
+        "streak": { "type": "number" },
+        "lastActiveDate": { "type": "string" }
+      },
+      "required": ["name", "email", "createdAt", "streak"]
+    },
+    "LessonProgress": {
+      "title": "Lesson Progress",
+      "description": "User progress for a specific scenario lesson",
+      "type": "object",
+      "properties": {
+        "completedPhrases": { "type": "array" },
+        "status": { "type": "string", "enum": ["locked", "in_progress", "done"] },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["completedPhrases", "status"]
+    },
+    "SavedWord": {
+      "title": "Saved Word",
+      "description": "A bookmarked phrase saved by the user for revision",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "kannada": { "type": "string", "maxLength": 200 },
+        "roman": { "type": "string", "maxLength": 200 },
+        "english": { "type": "string", "maxLength": 300 },
+        "hindi": { "type": "string", "maxLength": 300 },
+        "tip": { "type": "string", "maxLength": 500 },
+        "savedAt": { "type": "string" }
+      },
+      "required": ["id", "kannada", "roman", "english"]
+    },
+    "QuizResult": {
+      "title": "Quiz Result",
+      "description": "Score record from a quiz session",
+      "type": "object",
+      "properties": {
+        "lessonId": { "type": "string", "maxLength": 128 },
+        "score": { "type": "number" },
+        "total": { "type": "number" },
+        "date": { "type": "string" }
+      },
+      "required": ["score", "total", "date"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents"
+    },
+    "/users/{userId}/progress/{lessonId}": {
+      "schema": "LessonProgress",
+      "description": "Scenario completion and phrase mastery status"
+    },
+    "/users/{userId}/savedWords/{phraseId}": {
+      "schema": "SavedWord",
+      "description": "User's bookmarked vocabulary words"
+    },
+    "/users/{userId}/quizResults/{resultId}": {
+      "schema": "QuizResult",
+      "description": "User quiz completion results"
+    }
+  }
+}

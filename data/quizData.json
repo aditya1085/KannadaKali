@@ -1,0 +1,74 @@
+{
+  "quizzes": [
+    {
+      "id": "quiz-market-1",
+      "scenario": "🛒 Vegetable Market",
+      "scenarioKannada": "ತರಕಾರಿ ಮಾರುಕಟ್ಟೆ",
+      "question": "You want to ask a vegetable vendor 'How much are the tomatoes?'. Which Kannada phrase should you use?",
+      "questionKannada": "ಟೊಮೆಟೊ ಎಷ್ಟು ರೂಪಾಯಿ ಎಂದು ಕೇಳಲು ಯಾವ ವಾಕ್ಯ ಸರಿಯಾಗಿದೆ?",
+      "options": [
+        {
+          "id": "opt-1",
+          "kannada": "ಟೊಮೆಟೊ ಎಷ್ಟು ರೂಪಾಯಿ?",
+          "roman": "Tomato eshtu roopayi?",
+          "english": "How much are the tomatoes?"
+        },
+        {
+          "id": "opt-2",
+          "kannada": "ನನಗೆ ಟೊಮೆಟೊ ಬೇಡ",
+          "roman": "Nanage tomato beda",
+          "english": "I don't want tomatoes"
+        },
+        {
+          "id": "opt-3",
+          "kannada": "ಟೊಮೆಟೊ ಇಲ್ಲ",
+          "roman": "Tomato illa",
+          "english": "There are no tomatoes"
+        },
+        {
+          "id": "opt-4",
+          "kannada": "ಟೊಮೆಟೊ ಚೆನ್ನಾಗಿದೆ",
+          "roman": "Tomato chennagide",
+          "english": "Tomatoes are good"
+        }
+      ],
+      "correctOptionId": "opt-1",
+      "explanation": "'Tomato eshtu roopayi?' directly translates to 'How many rupees for the tomatoes?'. 'Eshtu' means 'How much', and 'roopayi' means 'rupees'."
+    },
+    {
+      "id": "quiz-water-2",
+      "scenario": "🍛 Restaurant / General",
+      "scenarioKannada": "ಹೋಟೆಲ್",
+      "question": "What is the polite way to ask for water in Kannada?",
+      "questionKannada": "ನೀರು ಕೇಳಲು ಯಾವ ಪದ ಬಳಸಬೇಕು?",
+      "options": [
+        {
+          "id": "opt-1",
+          "kannada": "ನೀರು ಬೇಡ",
+          "roman": "Neeru beda",
+          "english": "I don't want water"
+        },
+        {
+          "id": "opt-2",
+          "kannada": "ನೀರು ಬೇಕು",
+          "roman": "Neeru beku",
+          "english": "I want water"
+        },
+        {
+          "id": "opt-3",
+          "kannada": "ನೀರು ಎಲ್ಲಿದೆ?",
+          "roman": "Neeru ellide?",
+          "english": "Where is water?"
+        },
+        {
+          "id": "opt-4",
+          "kannada": "ನೀರು ತನ್ನಿ",
+          "roman": "Neeru tanni",
+          "english": "Bring water"
+        }
+      ],
+      "correctOptionId": "opt-2",
+      "explanation": "'Neeru beku' means 'I want water' ('Neeru' = water, 'beku' = want/needed). It is simple and widely understood."
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+[
+  {
+    "id": "market-chat",
+    "title": "Sabzi wale se baat karo",
+    "kannadaTitle": "ತರಕಾರಿ ವ್ಯಾಪಾರಿಯೊಂದಿಗೆ ಮಾತುಕತೆ",
+    "category": "Market & Groceries",
+    "vendorName": "ಮಂಜುನಾಥ್ (Manjunath)",
+    "vendorRole": "ತರಕಾರಿ ಅಂಗಡಿ ವ್ಯಾಪಾರಿ (Vegetable Vendor)",
+    "description": "Practice bargaining and buying fresh vegetables in Bangalore markets.",
+    "initialMessage": {
+      "sender": "bot",
+      "kannada": "ಬನ್ನಿ ಸರ್! ನಮಸ್ಕಾರ, ಇವತ್ತು ತಾಜಾ ತರಕಾರಿ ಬಂದಿದೆ. ಏನು ಬೇಕು?",
+      "roman": "Banni sir! Namaskara, ivattu taaja tarkari bandide. Enu beku?",
+      "english": "Welcome sir! Namaskara, fresh vegetables arrived today. What do you need?",
+      "timestamp": "10:00 AM"
+    },
+    "quickReplies": [
+      {
+        "kannada": "ಟೊಮೆಟೊ ಎಷ್ಟು ರೂಪಾಯಿ?",
+        "roman": "Tomato eshtu roopayi?",
+        "english": "How much are the tomatoes?"
+      },
+      {
+        "kannada": "ಒಂದು ಕೆಜಿ ಆಲೂಗಡ್ಡೆ ಕೊಡಿ",
+        "roman": "Ondu kg aaloogadde kodi",
+        "english": "Give 1 kg potatoes please"
+      },
+      {
+        "kannada": "ಸ್ವಲ್ಪ ಕಡಿಮೆ ಮಾಡಿ",
+        "roman": "Swalpa kadime maadi",
+        "english": "Please reduce a little"
+      },
+      {
+        "kannada": "ಒಟ್ಟು ಎಷ್ಟು ಆಯ್ತು?",
+        "roman": "Ottu eshtu aaytu?",
+        "english": "What is the total amount?"
+      }
+    ],
+    "dummyResponses": {
+      "ಟೊಮೆಟೊ ಎಷ್ಟು ರೂಪಾಯಿ?": {
+        "kannada": "ಟೊಮೆಟೊ ಕೆಜಿಗೆ ೩೦ ರೂಪಾಯಿ ಸರ್. ತುಂಬಾ ತಾಜಾ ಇದೆ!",
+        "roman": "Tomato kg-ge moovattu roopayi sir. Tumba taaja ide!",
+        "english": "Tomatoes are 30 rupees per kilo sir. Very fresh!"
+      },
+      "ಒಂದು ಕೆಜಿ ಆಲೂಗಡ್ಡೆ ಕೊಡಿ": {
+        "kannada": "ಖಂಡಿತ ಸರ್, ತಗೊಳ್ಳಿ. ಇನ್ನೇನು ಬೇಕು?",
+        "roman": "Khanditha sir, tagolli. Innenoo beku?",
+        "english": "Certainly sir, please take. What else do you need?"
+      },
+      "ಸ್ವಲ್ಪ ಕಡಿಮೆ ಮಾಡಿ": {
+        "kannada": "ಸರಿ ಸರ್, ನಿಮಗೋಸ್ಕರ ೫ ರೂಪಾಯಿ ಕಡಿಮೆ ಮಾಡ್ತೀನಿ. ತಗೊಳ್ಳಿ!",
+        "roman": "Sari sir, nimgoskara aidu roopayi kadime maadtini. Tagolli!",
+        "english": "Okay sir, for you I will reduce 5 rupees. Please take!"
+      },
+      "ಒಟ್ಟು ಎಷ್ಟು ಆಯ್ತು?": {
+        "kannada": "ಒಟ್ಟು ೬೫ ರೂಪಾಯಿ ಆಯ್ತು ಸರ್. Google Pay ಇದೆಯಾ?",
+        "roman": "Ottu aravattaidu roopayi aaytu sir. Google Pay ideya?",
+        "english": "Total is 65 rupees sir. Do you have Google Pay?"
+      },
+      "default": {
+        "kannada": "ತುಂಬಾ ಒಳ್ಳೆಯದು! ಬೇರೆ ಏನಾದರೂ ಸಹಾಯ ಬೇಕಾ?",
+        "roman": "Tumba olleyadu! Bere enaadaru sahaya beka?",
+        "english": "Very good! Do you need any other help?"
+      }
+    }
+  },
+  {
+    "id": "auto-chat",
+    "title": "Auto driver se baat karo",
+    "kannadaTitle": "ಆಟೋ ಚಾಲಕರೊಂದಿಗೆ ಮಾತುಕತೆ",
+    "category": "Travel & Commute",
+    "vendorName": "ರವಿಕುಮಾರ್ (Ravikumar)",
+    "vendorRole": "ಆಟೋ ಚಾಲಕ (Auto Driver)",
+    "description": "Request meter, ask direction, and pay auto fare smoothly.",
+    "initialMessage": {
+      "sender": "bot",
+      "kannada": "ಹಲೋ ಬಾಸ್, ಎಲ್ಲಿಗೆ ಹೋಗ್ಬೇಕು?",
+      "roman": "Hello boss, ellige hogbeku?",
+      "english": "Hello boss, where do you want to go?",
+      "timestamp": "10:15 AM"
+    },
+    "quickReplies": [
+      {
+        "kannada": "ಇಂದಿರಾನಗರಕ್ಕೆ ಹೋಗುತ್ತಾ?",
+        "roman": "Indiranagar-kke hoguttaa?",
+        "english": "Will you go to Indiranagar?"
+      },
+      {
+        "kannada": "ಮೀಟರ್ ಹಾಕಿ ಬನ್ನಿ",
+        "roman": "Meter haaki banni",
+        "english": "Please put meter and come"
+      },
+      {
+        "kannada": "ಎಷ್ಟು ರೂಪಾಯಿ ಆಗುತ್ತೆ?",
+        "roman": "Eshtu roopayi aagutte?",
+        "english": "How many rupees will it be?"
+      }
+    ],
+    "dummyResponses": {
+      "ಇಂದಿರಾನಗರಕ್ಕೆ ಹೋಗುತ್ತಾ?": {
+        "kannada": "ಹೌದು, ಬನ್ನಿ ಕೂತ್ಕೊಳ್ಳಿ. ಮೆಟ್ರೋ ಸ್ಟೇಷನ್ ಹತ್ತಿರನಾ?",
+        "roman": "Haudu, banni kootkolli. Metro station hattirana?",
+        "english": "Yes, come sit. Near metro station?"
+      },
+      "ಮೀಟರ್ ಹಾಕಿ ಬನ್ನಿ": {
+        "kannada": "ಸರಿ ಸರ್, ಮೀಟರ್ ಹಾಕ್ತೀನಿ. ಬನ್ನಿ.",
+        "roman": "Sari sir, meter haaktini. Banni.",
+        "english": "Okay sir, I'll put the meter. Hop in."
+      },
+      "default": {
+        "kannada": "ಸರಿ ಸರ್, ಮುಂದೆ ಬಲಗಡೆ ತಿರುಗಿಸಬೇಕಾ?",
+        "roman": "Sari sir, munde balagade tirugisabeka?",
+        "english": "Okay sir, should I turn right ahead?"
+      }
+    }
+  }
+]

@@ -1,0 +1,387 @@
+[
+  {
+    "id": "market",
+    "title": "Market",
+    "emoji": "🛒",
+    "kannadaTitle": "ತರಕಾರಿ ಮಾರುಕಟ್ಟೆ",
+    "romanTitle": "Tarkari Marukatte",
+    "description": "Essential phrases for buying fresh vegetables, bargaining gently, and asking prices in local markets.",
+    "status": "completed",
+    "progress": 100,
+    "badge": "✅ Done",
+    "phrases": [
+      {
+        "id": "mkt-1",
+        "kannada": "ನಮಸ್ಕಾರ",
+        "roman": "Namaskara",
+        "english": "Hello / Greetings",
+        "hindi": "Namaste",
+        "tip": "Everyday polite greeting to start any interaction warmly."
+      },
+      {
+        "id": "mkt-2",
+        "kannada": "ನೀರು ಬೇಕು",
+        "roman": "Neeru beku",
+        "english": "I want water",
+        "hindi": "Paani chahiye",
+        "tip": "Say 'beku' whenever you need or want something."
+      },
+      {
+        "id": "mkt-3",
+        "kannada": "ಎಷ್ಟು?",
+        "roman": "Eshtu?",
+        "english": "How much?",
+        "hindi": "Kitna hua?",
+        "tip": "Point at any vegetable or fruit and simply ask 'Eshtu?'."
+      },
+      {
+        "id": "mkt-4",
+        "kannada": "ಟೊಮೆಟೊ ಎಷ್ಟು ರೂಪಾಯಿ?",
+        "roman": "Tomato eshtu roopayi?",
+        "english": "How much are the tomatoes?",
+        "hindi": "Tamatar kitne rupaye ke hain?",
+        "tip": "Replace 'Tomato' with any vegetable like Eerulli (Onion) or Aaloogadde (Potato)."
+      },
+      {
+        "id": "mkt-5",
+        "kannada": "ಒಂದು ಕೆಜಿ ಕೊಡಿ",
+        "roman": "Ondu kg kodi",
+        "english": "Give 1 kg please",
+        "hindi": "Ek kilo dijiye",
+        "tip": "'Kodi' is the respectful word for 'please give'."
+      },
+      {
+        "id": "mkt-6",
+        "kannada": "ತಾಜಾ ಇದೆಯಾ?",
+        "roman": "Taaja ideya?",
+        "english": "Is it fresh?",
+        "hindi": "Taaza hai kya?",
+        "tip": "'Ideya?' is used to ask 'is it available?' or 'is it there?'."
+      },
+      {
+        "id": "mkt-7",
+        "kannada": "ಸ್ವಲ್ಪ ಕಡಿಮೆ ಮಾಡಿ",
+        "roman": "Swalpa kadime maadi",
+        "english": "Please reduce a little",
+        "hindi": "Thoda kam kijiye",
+        "tip": "Gentle, respectful phrase for bargaining in local Bangalore markets."
+      },
+      {
+        "id": "mkt-8",
+        "kannada": "ಕ್ಯೂಆರ್ ಕೋಡ್ ಇದೆಯಾ?",
+        "roman": "QR code ideya?",
+        "english": "Do you have a QR code?",
+        "hindi": "QR code hai kya?",
+        "tip": "Everyday phrase to pay via UPI, PhonePe, or Google Pay."
+      }
+    ]
+  },
+  {
+    "id": "bus-auto",
+    "title": "Bus / Auto",
+    "emoji": "🚌",
+    "kannadaTitle": "ಬಸ್ ಮತ್ತು ಆಟೋ",
+    "romanTitle": "Bus mattu Auto",
+    "description": "Navigate BMTC buses, Namma Metro, and Auto rickshaws around Bengaluru with confidence.",
+    "status": "in_progress",
+    "progress": 40,
+    "badge": "▶ Resume",
+    "phrases": [
+      {
+        "id": "bus-1",
+        "kannada": "ಮೆಜೆಸ್ಟಿಕ್‌ಗೆ ಹೋಗುತ್ತಾ?",
+        "roman": "Majestic-ge hoguttaa?",
+        "english": "Does this go to Majestic?",
+        "hindi": "Kya yeh Majestic jaata hai?",
+        "tip": "Add '-ge' to any stop or area name to ask if the vehicle goes there."
+      },
+      {
+        "id": "bus-2",
+        "kannada": "ಮೀಟರ್ ಹಾಕಿ",
+        "roman": "Meter haaki",
+        "english": "Please put the meter",
+        "hindi": "Meter lagaiye",
+        "tip": "Politely ask this before boarding any auto rickshaw."
+      },
+      {
+        "id": "bus-3",
+        "kannada": "ಇಲ್ಲಿ ನಿಲ್ಲಿಸಿ",
+        "roman": "Illi nillisi",
+        "english": "Please stop here",
+        "hindi": "Yahan rokiye",
+        "tip": "'Illi' means here, and 'nillisi' means please stop."
+      },
+      {
+        "id": "bus-4",
+        "kannada": "ಎಷ್ಟು ಆಗುತ್ತೆ?",
+        "roman": "Eshtu aagutte?",
+        "english": "How much will it be?",
+        "hindi": "Kitna hoga?",
+        "tip": "Standard fare enquiry before starting your auto ride."
+      },
+      {
+        "id": "bus-5",
+        "kannada": "ಮುಂದೆ ಬಲಗಡೆ ತಿರುಗಿಸಿ",
+        "roman": "Munde balagade tirugisi",
+        "english": "Turn right ahead",
+        "hindi": "Aage right mudiye",
+        "tip": "'Balagade' = Right side, 'Edagade' = Left side, 'Munde' = Ahead."
+      },
+      {
+        "id": "bus-6",
+        "kannada": "ಚಿಲ್ಲರೆ ಇಲ್ಲ",
+        "roman": "Chillare illa",
+        "english": "I don't have change",
+        "hindi": "Chhutta nahi hai",
+        "tip": "Handy when you only have larger notes for bus conductors or auto drivers."
+      },
+      {
+        "id": "bus-7",
+        "kannada": "ಮುಂದಿನ ಸ್ಟಾಪ್ ಯಾವುದು?",
+        "roman": "Mundina stop yaavudu?",
+        "english": "Which is the next stop?",
+        "hindi": "Agla stop kaunsa hai?",
+        "tip": "Ask fellow passengers or the bus conductor when travelling on BMTC."
+      },
+      {
+        "id": "bus-8",
+        "kannada": "ಆನ್‌ಲೈನ್ ಪೇಮೆಂಟ್ ಮಾಡ್ಲಾ?",
+        "roman": "Online payment maadlaa?",
+        "english": "Can I pay online?",
+        "hindi": "Online payment karun kya?",
+        "tip": "'Maadlaa?' means 'Shall I do?' - very common colloquial usage."
+      }
+    ]
+  },
+  {
+    "id": "restaurant",
+    "title": "Restaurant",
+    "emoji": "🍛",
+    "kannadaTitle": "ಹೋಟೆಲ್ ಮತ್ತು ತಿಂಡಿ",
+    "romanTitle": "Hotel mattu Thindi",
+    "description": "Order crispy Masala Dose, Filter Kaapi, and ask for condiments in Darshinis.",
+    "status": "not_started",
+    "progress": 0,
+    "badge": "Start",
+    "phrases": [
+      {
+        "id": "res-1",
+        "kannada": "ಮೆನು ಕೊಡಿ",
+        "roman": "Menu kodi",
+        "english": "Please give the menu",
+        "hindi": "Menu dijiye",
+        "tip": "'Kodi' is the respectful imperative for 'give'."
+      },
+      {
+        "id": "res-2",
+        "kannada": "ಒಂದು ಮಸಾಲೆ ದೋಸೆ",
+        "roman": "Ondu masale dose",
+        "english": "One masala dosa",
+        "hindi": "Ek masala dosa",
+        "tip": "Locals pronounce it 'Dose' (doh-say), not 'dosa'."
+      },
+      {
+        "id": "res-3",
+        "kannada": "ಖಾರ ಕಡಿಮೆ ಇರಲಿ",
+        "roman": "Khaara kadime irali",
+        "english": "Keep it less spicy",
+        "hindi": "Teekha kam rakhiye",
+        "tip": "'Khaara' means spicy, and 'kadime' means less."
+      },
+      {
+        "id": "res-4",
+        "kannada": "ಸ್ವಲ್ಪ ಚಟ್ನಿ ಕೊಡಿ",
+        "roman": "Swalpa chutney kodi",
+        "english": "Please give some more chutney",
+        "hindi": "Thodi chutney dijiye",
+        "tip": "Say this at the counter for extra coconut or tomato chutney."
+      },
+      {
+        "id": "res-5",
+        "kannada": "ಬಿಸಿ ನೀರು ಇದೆಯಾ?",
+        "roman": "Bisi neeru ideya?",
+        "english": "Is hot water available?",
+        "hindi": "Garam paani hai kya?",
+        "tip": "'Bisi' means hot or warm; 'neeru' means water."
+      },
+      {
+        "id": "res-6",
+        "kannada": "ಫಿಲ್ಟರ್ ಕಾಫಿ ಕೊಡಿ",
+        "roman": "Filter kaafi kodi",
+        "english": "Please give one filter coffee",
+        "hindi": "Filter coffee dijiye",
+        "tip": "Classic Bangalore Darshini order to finish your breakfast."
+      },
+      {
+        "id": "res-7",
+        "kannada": "ಇನ್ನೂ ಎಷ್ಟು ಸಮಯ ಬೇಕು?",
+        "roman": "Innoo eshtu samaya beku?",
+        "english": "How much more time will it take?",
+        "hindi": "Aur kitna time lagega?",
+        "tip": "Polite check when your order is taking longer than expected."
+      },
+      {
+        "id": "res-8",
+        "kannada": "ಬಿಲ್ ತನ್ನಿ",
+        "roman": "Bill tanni",
+        "english": "Please bring the bill",
+        "hindi": "Bill le aaiye",
+        "tip": "'Tanni' means please bring."
+      }
+    ]
+  },
+  {
+    "id": "hospital",
+    "title": "Hospital",
+    "emoji": "🏥",
+    "kannadaTitle": "ಆಸ್ಪತ್ರೆ ಮತ್ತು ಔಷಧ",
+    "romanTitle": "Aaspathre mattu Oushadha",
+    "description": "Communicate health symptoms, consult doctors, and buy medicines at medical stores.",
+    "status": "not_started",
+    "progress": 0,
+    "badge": "Start",
+    "phrases": [
+      {
+        "id": "hosp-1",
+        "kannada": "ನನಗೆ ಹುಷಾರಿಲ್ಲ",
+        "roman": "Nanage hushaarilla",
+        "english": "I am not feeling well",
+        "hindi": "Meri tabiyat theek nahi hai",
+        "tip": "The most natural and common way to state you are unwell."
+      },
+      {
+        "id": "hosp-2",
+        "kannada": "ತಲೆನೋವು ಇದೆ",
+        "roman": "Talenovu ide",
+        "english": "I have a headache",
+        "hindi": "Sardard hai",
+        "tip": "'Tale' = Head, 'Novu' = Pain, 'Ide' = I have / is there."
+      },
+      {
+        "id": "hosp-3",
+        "kannada": "ಜ್ವರ ಬಂದಿದೆ",
+        "roman": "Jwara bandide",
+        "english": "I have a fever",
+        "hindi": "Bukhaar aaya hai",
+        "tip": "'Jwara' means fever, and 'bandide' means has come."
+      },
+      {
+        "id": "hosp-4",
+        "kannada": "ಹೊಟ್ಟೆ ನೋವು ತುಂಬಾ ಇದೆ",
+        "roman": "Hotte novu tumba ide",
+        "english": "I have severe stomach pain",
+        "hindi": "Pet mein bahut dard hai",
+        "tip": "'Hotte' = Stomach, 'Tumba' = A lot / severe."
+      },
+      {
+        "id": "hosp-5",
+        "kannada": "ಡಾಕ್ಟರ್ ಯಾವಾಗ ಬರುತ್ತಾರೆ?",
+        "roman": "Doctor yaavaaga baruttaare?",
+        "english": "When will the doctor come?",
+        "hindi": "Doctor kab aayenge?",
+        "tip": "'Yaavaaga' means when. 'Baruttaare' is the respectful plural."
+      },
+      {
+        "id": "hosp-6",
+        "kannada": "ಈ ಔಷಧಿ ಯಾವಾಗ ತಗೋಬೇಕು?",
+        "roman": "Ee oushadhi yaavaaga tagobeku?",
+        "english": "When should I take this medicine?",
+        "hindi": "Yeh dawai kab leni chahiye?",
+        "tip": "'Oushadhi' = Medicine, 'Tagobeku' = Should take."
+      },
+      {
+        "id": "hosp-7",
+        "kannada": "ಊಟದ ನಂತರನಾ ಅಥವಾ ಮುಂಚೆನಾ?",
+        "roman": "Ootada nantaranaa athavaa munchenaa?",
+        "english": "After meals or before?",
+        "hindi": "Khane ke baad ya pehle?",
+        "tip": "'Oota' = Meal, 'Nantara' = After, 'Munche' = Before."
+      },
+      {
+        "id": "hosp-8",
+        "kannada": "ರಿಪೋರ್ಟ್ ಯಾವಾಗ ಸಿಗುತ್ತೆ?",
+        "roman": "Report yaavaaga sigutte?",
+        "english": "When will the report be ready?",
+        "hindi": "Report kab milegi?",
+        "tip": "'Sigutte' means will be available / will get."
+      }
+    ]
+  },
+  {
+    "id": "office",
+    "title": "Office",
+    "emoji": "💼",
+    "kannadaTitle": "ಕಚೇರಿ ಸಂಭಾಷಣೆ",
+    "romanTitle": "Kacheri Sambhashane",
+    "description": "Friendly greetings and casual work conversations with Kannada-speaking colleagues.",
+    "status": "locked",
+    "progress": 0,
+    "badge": "🔒 Locked",
+    "phrases": [
+      {
+        "id": "off-1",
+        "kannada": "ಶುಭೋದಯ",
+        "roman": "Shubhodaya",
+        "english": "Good morning",
+        "hindi": "Shubh prabhat / Good morning",
+        "tip": "Pleasant formal morning greeting for team members."
+      },
+      {
+        "id": "off-2",
+        "kannada": "ಹೇಗಿದ್ದೀರಾ?",
+        "roman": "Hegiddira?",
+        "english": "How are you? (respectful)",
+        "hindi": "Aap kaise hain?",
+        "tip": "Warm and courteous greeting for colleagues and managers."
+      },
+      {
+        "id": "off-3",
+        "kannada": "ಚಹಾ ಕುಡಿಯೋಣ ಬನ್ನಿ",
+        "roman": "Chaha kudiyona banni",
+        "english": "Come, let's have tea",
+        "hindi": "Aaiye chai peete hain",
+        "tip": "Great friendly phrase for inviting peers on a tea or coffee break."
+      },
+      {
+        "id": "off-4",
+        "kannada": "ನಾಳೆ ಮೀಟಿಂಗ್ ಇದೆ",
+        "roman": "Naale meeting ide",
+        "english": "There is a meeting tomorrow",
+        "hindi": "Kal meeting hai",
+        "tip": "'Naale' means tomorrow, and 'ide' means is there."
+      },
+      {
+        "id": "off-5",
+        "kannada": "ಒಂದು ನಿಮಿಷ ಇರಿ",
+        "roman": "Ondu nimisha iri",
+        "english": "Wait for one minute please",
+        "hindi": "Ek minute rukiye",
+        "tip": "'Ondu' = One, 'Nimisha' = Minute, 'Iri' = Please wait."
+      },
+      {
+        "id": "off-6",
+        "kannada": "ನನಗೆ ಸ್ವಲ್ಪ ಸಹಾಯ ಬೇಕು",
+        "roman": "Nanage swalpa sahaya beku",
+        "english": "I need a little help",
+        "hindi": "Mujhe thodi help chahiye",
+        "tip": "Polite phrase when requesting coworker assistance on a project."
+      },
+      {
+        "id": "off-7",
+        "kannada": "ನಾನು ಇವತ್ತು ಬೇಗ ಹೋಗಬಹುದಾ?",
+        "roman": "Naanu ivattu bega hogabahudaa?",
+        "english": "Can I leave early today?",
+        "hindi": "Kya main aaj jaldi jaa sakta hoon?",
+        "tip": "'Bega' = Early, 'Hogabahudaa' = May I go?"
+      },
+      {
+        "id": "off-8",
+        "kannada": "ತುಂಬಾ ಧನ್ಯವಾದಗಳು",
+        "roman": "Tumba dhanyavadagalu",
+        "english": "Thank you very much",
+        "hindi": "Bahut bahut dhanyavaad",
+        "tip": "'Tumba' means very much. Highly appreciative closing."
+      }
+    ]
+  }
+]

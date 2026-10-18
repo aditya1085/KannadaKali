@@ -1,0 +1,6 @@
+{
+  "name": "KannadaKali - Learn Practical Kannada",
+  "description": "Interactive Kannada learning platform for non-Kannada speakers through everyday scenarios, practical dialogues, audio pronunciation, and AI chat.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "sw-1",
+    "kannada": "ನೀರು",
+    "roman": "Neeru",
+    "english": "Water",
+    "hindi": "पानी",
+    "category": "Essentials"
+  },
+  {
+    "id": "sw-2",
+    "kannada": "ಧನ್ಯವಾದಗಳು",
+    "roman": "Dhanyavadagalu",
+    "english": "Thank you",
+    "hindi": "धन्यवाद",
+    "category": "Courtesy"
+  },
+  {
+    "id": "sw-3",
+    "kannada": "ಎಷ್ಟು",
+    "roman": "Eshtu",
+    "english": "How much",
+    "hindi": "कितना",
+    "category": "Shopping"
+  },
+  {
+    "id": "sw-4",
+    "kannada": "ನಮಸ್ಕಾರ",
+    "roman": "Namaskara",
+    "english": "Hello / Greetings",
+    "hindi": "नमस्ते",
+    "category": "Greetings"
+  },
+  {
+    "id": "sw-5",
+    "kannada": "ಗೊತ್ತಿಲ್ಲ",
+    "roman": "Gottilla",
+    "english": "I don't know",
+    "hindi": "पता नहीं",
+    "category": "Conversation"
+  },
+  {
+    "id": "sw-6",
+    "kannada": "ಬೇಕು",
+    "roman": "Beku",
+    "english": "Want / Needed",
+    "hindi": "चाहिए",
+    "category": "Essentials"
+  }
+]
