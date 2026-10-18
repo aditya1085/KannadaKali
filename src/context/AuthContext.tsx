@@ -85,20 +85,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUserData(initialUser);
       } else {
         const existingData = snap.data() as UserDocData;
-        let newStreak = existingData.streak ?? 1;
-
-        if (existingData.lastActiveDate === yesterday) {
-          newStreak += 1;
-        } else if (existingData.lastActiveDate !== today) {
-          newStreak = 1; // Streak reset if inactive for more than a day
-        }
-
         const updated: Partial<UserDocData> = {
           name: fbUser.displayName || existingData.name,
           email: fbUser.email || existingData.email,
           photoURL: fbUser.photoURL || existingData.photoURL,
-          streak: newStreak,
-          lastActiveDate: today,
         };
 
         await updateDoc(userDocRef, updated);

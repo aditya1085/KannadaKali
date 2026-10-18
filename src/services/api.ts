@@ -213,7 +213,91 @@ export const api = {
     return json.data;
   },
 
-  // POST /api/quiz/submit
+  // POST /api/quiz/submit - Full quiz submission with idToken verification
+  async submitQuizResult(params: {
+    lessonId: string;
+    score: number;
+    total: number;
+    idToken: string;
+    userLocalDate?: string;
+  }): Promise<{
+    passed: boolean;
+    percentage: number;
+    unlockedLessonId: string | null;
+    result: {
+      lessonId: string;
+      score: number;
+      total: number;
+      percentage: number;
+      passed: boolean;
+      date: string;
+    };
+  }> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (params.idToken) {
+      headers['Authorization'] = `Bearer ${params.idToken}`;
+    }
+
+    const res = await fetch('/api/quiz/submit', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        lessonId: params.lessonId,
+        score: params.score,
+        total: params.total,
+        userLocalDate: params.userLocalDate || new Date().toLocaleDateString('en-CA'),
+      }),
+    });
+
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new ApiError(errJson.message || 'Failed to submit quiz score to server', res.status);
+    }
+
+    const json = await res.json();
+    return {
+      passed: json.result?.passed ?? (json.result?.percentage >= 60),
+      percentage: json.result?.percentage ?? Math.round((params.score / params.total) * 100),
+      unlockedLessonId: json.unlockedLessonId || null,
+      result: json.result,
+    };
+  },
+
+  // POST /api/progress - Update lesson progress
+  async updateProgress(params: {
+    lessonId: string;
+    status: string;
+    completedPhrases?: string[];
+    idToken: string;
+  }): Promise<{ success: boolean; lessonId: string; status: string; completedPhrases: string[] }> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (params.idToken) {
+      headers['Authorization'] = `Bearer ${params.idToken}`;
+    }
+
+    const res = await fetch('/api/progress', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        action: 'update_progress',
+        lessonId: params.lessonId,
+        status: params.status,
+        completedPhrases: params.completedPhrases,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new ApiError('Failed to update progress on server', res.status);
+    }
+
+    return await res.json();
+  },
+
+  // POST /api/quiz/submit (single question check compatibility)
   async submitQuizAnswer(quizId: string, selectedOptionId: string): Promise<{
     isCorrect: boolean;
     correctOptionId: string;

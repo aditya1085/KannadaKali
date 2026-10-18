@@ -44,12 +44,14 @@ export interface SavedWord {
   english: string;
   hindi?: string;
   category?: string;
+  tip?: string;
 }
 
 export interface WeeklyDayActivity {
   day: string;
   short: string;
   minutes: number;
+  count: number;
   target: number;
   isToday: boolean;
 }
@@ -59,7 +61,7 @@ export interface UserStats {
   completedLessons: number;
   totalLessons: number;
   savedWordsCount: number;
-  avgQuizScore: number;
+  avgQuizScore: number | null;
 }
 
 export interface UserProfile {
@@ -72,17 +74,23 @@ export interface UserProfile {
 
 export interface QuizOption {
   id: string;
-  kannada: string;
-  roman: string;
-  english: string;
+  kannada?: string;
+  roman?: string;
+  english?: string;
+  displayText: string;
+  subText?: string;
 }
 
 export interface QuizQuestion {
   id: string;
+  type: 'kannada_to_english' | 'english_to_kannada' | 'roman_to_meaning';
   scenario: string;
-  scenarioKannada: string;
+  scenarioKannada?: string;
   question: string;
-  questionKannada: string;
+  questionKannada?: string;
+  audioKannada?: string;
+  promptText: string;
+  promptSubtext?: string;
   options: QuizOption[];
   correctOptionId: string;
   explanation: string;

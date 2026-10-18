@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Volume2, Heart, Check, Sparkles, Lightbulb, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Volume2, Heart, Check, Sparkles, Lightbulb, CheckCircle2, Award } from 'lucide-react';
 import { Lesson, Phrase } from '../types';
 import { api } from '../services/api';
 import { speakKannada } from '../utils/speech';
@@ -14,6 +14,7 @@ interface LessonDetailPageProps {
   onSaveWord: (phrase: Phrase) => void;
   onUnsaveWord: (phraseId: string) => void;
   onToggleCompletePhrase?: (phraseId: string) => void;
+  onTakeQuiz?: (lessonId: string) => void;
   onVoiceMissing: () => void;
   onStartChatWithScenario?: (scenarioId: string) => void;
 }
@@ -27,6 +28,7 @@ export const LessonDetailPage: React.FC<LessonDetailPageProps> = ({
   onSaveWord,
   onUnsaveWord,
   onToggleCompletePhrase,
+  onTakeQuiz,
   onVoiceMissing,
   onStartChatWithScenario
 }) => {
@@ -55,6 +57,10 @@ export const LessonDetailPage: React.FC<LessonDetailPageProps> = ({
 
   const handleListen = (phrase: Phrase) => {
     setPlayingId(phrase.id);
+    // Growing progress as user views or listens to phrases
+    if (onToggleCompletePhrase && !completedPhraseIds.includes(phrase.id)) {
+      onToggleCompletePhrase(phrase.id);
+    }
     speakKannada(
       phrase.kannada,
       () => setPlayingId(phrase.id),
@@ -161,6 +167,16 @@ export const LessonDetailPage: React.FC<LessonDetailPageProps> = ({
                 />
               </div>
             </div>
+
+            {onTakeQuiz && (
+              <button
+                onClick={() => onTakeQuiz(lesson.id)}
+                className="w-full min-h-[44px] px-4 py-2 bg-[#B71C1C] text-white hover:bg-[#8F1414] rounded-[10px] text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition-all"
+              >
+                <Award size={14} />
+                <span>Take Quiz</span>
+              </button>
+            )}
 
             <button
               onClick={() => onStartChatWithScenario && onStartChatWithScenario(lesson.id === 'market' ? 'market-chat' : 'auto-chat')}

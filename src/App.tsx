@@ -16,13 +16,14 @@ import { VoiceNoticeBanner } from './components/VoiceNoticeBanner';
 import { Lesson, SavedWord, UserProfile, UserStats, WeeklyDayActivity, DailyPhrase, Phrase } from './types';
 import { api } from './services/api';
 import { useAuth } from './context/AuthContext';
-import { firestoreService, UserLessonProgress, QuizRecord } from './services/firestoreService';
+import { firestoreService, UserLessonProgress, QuizRecord, PracticeSessionRecord, normalizeLessonId } from './services/firestoreService';
 
 export default function App() {
   const { user, userData, loading: authLoading, logout } = useAuth();
 
   const [activeTab, setActiveTab] = useState<string>('home');
   const [selectedLessonId, setSelectedLessonId] = useState<string>('market');
+  const [selectedQuizLessonId, setSelectedQuizLessonId] = useState<string | null>(null);
   const [chatScenarioId, setChatScenarioId] = useState<string>('market-chat');
 
   // Loading and error states for lesson definitions from API
@@ -34,6 +35,7 @@ export default function App() {
   const [progressMap, setProgressMap] = useState<Record<string, UserLessonProgress>>({});
   const [savedWords, setSavedWords] = useState<SavedWord[]>([]);
   const [quizResults, setQuizResults] = useState<QuizRecord[]>([]);
+  const [practiceSessions, setPracticeSessions] = useState<PracticeSessionRecord[]>([]);
 
   // Daily phrase state
   const [dailyPhrase, setDailyPhrase] = useState<DailyPhrase>({
@@ -52,7 +54,7 @@ export default function App() {
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+    setTimeout(() => setToastMessage(null), 3500);
   };
 
   // 1. Fetch raw lessons summary list and daily phrase from Express backend
@@ -89,6 +91,7 @@ export default function App() {
       setProgressMap({});
       setSavedWords([]);
       setQuizResults([]);
+      setPracticeSessions([]);
       return;
     }
 
@@ -110,17 +113,25 @@ export default function App() {
       (err) => console.warn('Quiz listener notice:', err)
     );
 
+    const unsubPractice = firestoreService.subscribePracticeSessions(
+      user.uid,
+      (sessions) => setPracticeSessions(sessions),
+      (err) => console.warn('Practice sessions listener notice:', err)
+    );
+
     return () => {
       unsubProgress();
       unsubSaved();
       unsubQuiz();
+      unsubPractice();
     };
   }, [user]);
 
   // 3. Merge API lesson structure with real user Firestore progress
   const lessons: Lesson[] = useMemo(() => {
     return rawLessons.map((lesson) => {
-      const userProg = progressMap[lesson.id];
+      const normId = normalizeLessonId(lesson.id);
+      const userProg = progressMap[normId] || progressMap[lesson.id];
       const completedPhrases = userProg?.completedPhrases || [];
       const totalPhrases = lesson.phraseCount || lesson.totalPhrases || 8;
       const progressPercent = Math.min(100, Math.round((completedPhrases.length / totalPhrases) * 100));
@@ -140,7 +151,7 @@ export default function App() {
           status = 'locked';
           badge = '🔒 Locked';
         }
-      } else if (lesson.id === 'market') {
+      } else if (normId === 'market') {
         // Market defaults to unlocked for new users
         status = 'in_progress';
         badge = 'Start';
@@ -157,15 +168,18 @@ export default function App() {
     });
   }, [rawLessons, progressMap]);
 
-  // 4. Calculate real user stats from Firestore
+  // 4. Calculate real user stats from Firestore (with null if no quiz yet)
   const stats: UserStats = useMemo(() => {
     const completedLessonsCount = lessons.filter((l) => l.status === 'completed').length;
     const streak = userData?.streak ?? (user ? 1 : 0);
     const savedCount = savedWords.length;
 
-    let avgQuiz = 0;
+    let avgQuiz: number | null = null;
     if (quizResults.length > 0) {
-      const totalScore = quizResults.reduce((acc, curr) => acc + (curr.score / curr.total) * 100, 0);
+      const totalScore = quizResults.reduce((acc, curr) => {
+        const pct = curr.percentage ?? Math.round((curr.score / curr.total) * 100);
+        return acc + pct;
+      }, 0);
       avgQuiz = Math.round(totalScore / quizResults.length);
     }
 
@@ -178,41 +192,61 @@ export default function App() {
     };
   }, [lessons, userData, user, savedWords, quizResults]);
 
-  // 5. Calculate real weekly activity
+  // 5. Calculate real weekly activity for Mon - Sun with real counts
   const weeklyActivity: WeeklyDayActivity[] = useMemo(() => {
-    const days = [
-      { name: 'Mon', short: 'M', dayIndex: 1 },
-      { name: 'Tue', short: 'T', dayIndex: 2 },
-      { name: 'Wed', short: 'W', dayIndex: 3 },
-      { name: 'Thu', short: 'T', dayIndex: 4 },
-      { name: 'Fri', short: 'F', dayIndex: 5 },
-      { name: 'Sat', short: 'S', dayIndex: 6 },
-      { name: 'Sun', short: 'S', dayIndex: 0 },
+    const now = new Date();
+    // In JS: getDay() 0 is Sunday, 1 is Monday ... 6 is Saturday
+    const currentDay = now.getDay();
+    const distanceToMonday = currentDay === 0 ? 6 : currentDay - 1;
+
+    const mondayDate = new Date(now);
+    mondayDate.setDate(now.getDate() - distanceToMonday);
+
+    const dayNames = [
+      { name: 'Mon', short: 'M' },
+      { name: 'Tue', short: 'T' },
+      { name: 'Wed', short: 'W' },
+      { name: 'Thu', short: 'T' },
+      { name: 'Fri', short: 'F' },
+      { name: 'Sat', short: 'S' },
+      { name: 'Sun', short: 'S' },
     ];
 
-    const currentDayOfWeek = new Date().getDay();
+    const todayStr = now.toLocaleDateString('en-CA');
 
-    // Total phrases learned across all lessons
-    const totalPhrasesLearned = Object.values(progressMap).reduce(
-      (sum, p) => sum + (p.completedPhrases?.length || 0),
-      0
-    );
-    const quizzesCount = quizResults.length;
+    return dayNames.map((d, index) => {
+      const dayDate = new Date(mondayDate);
+      dayDate.setDate(mondayDate.getDate() + index);
+      const dateKey = dayDate.toLocaleDateString('en-CA');
+      const isToday = dateKey === todayStr;
 
-    // Estimate real active learning minutes for today
-    const todayMinutes = Math.min(45, (totalPhrasesLearned * 2) + (quizzesCount * 5) + (stats.streakDays > 0 ? 5 : 0));
+      // Count quizzes on this calendar date
+      const quizzesOnDay = quizResults.filter((q) => {
+        return q.date && q.date.startsWith(dateKey);
+      }).length;
 
-    return days.map((d) => {
-      const isToday = d.dayIndex === currentDayOfWeek;
+      // Count AI practice sessions on this calendar date
+      const sessionsOnDay = practiceSessions.filter((s) => {
+        return s.date && s.date.startsWith(dateKey);
+      }).length;
+
+      // Count lesson updates / completions on this calendar date
+      const lessonsOnDay = Object.values(progressMap).filter((p) => {
+        return p.updatedAt && p.updatedAt.startsWith(dateKey);
+      }).length;
+
+      const totalDayCount = quizzesOnDay + sessionsOnDay + lessonsOnDay;
+
       return {
         day: d.name,
         short: d.short,
-        minutes: isToday ? todayMinutes : 0,
-        target: 15,
+        minutes: totalDayCount * 10,
+        count: totalDayCount,
+        target: 3,
         isToday,
       };
     });
-  }, [progressMap, quizResults, stats.streakDays]);
+  }, [quizResults, practiceSessions, progressMap]);
 
   // Set of saved word IDs for fast lookup in phrase cards
   const savedWordIds = useMemo(() => {
@@ -257,22 +291,15 @@ export default function App() {
     if (!user) return;
     try {
       await firestoreService.togglePhraseCompletion(user.uid, selectedLessonId, phraseId, 8);
+      // Update streak for active learning
+      await firestoreService.updateStreakOnActivity(user.uid);
     } catch (err) {
       console.error('Error toggling phrase completion in Firestore:', err);
     }
   };
 
-  const handleQuizComplete = async (result: { lessonId: string; score: number; total: number }) => {
-    if (!user) return;
-    try {
-      await firestoreService.recordQuizResult(user.uid, result);
-    } catch (err) {
-      console.error('Error recording quiz result to Firestore:', err);
-    }
-  };
-
   const handleSelectLesson = (lessonId: string) => {
-    setSelectedLessonId(lessonId);
+    setSelectedLessonId(normalizeLessonId(lessonId));
     setActiveTab('lesson-detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -282,6 +309,12 @@ export default function App() {
       setChatScenarioId(scenarioId);
     }
     setActiveTab('practice');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleTakeQuiz = (lessonId: string) => {
+    setSelectedQuizLessonId(normalizeLessonId(lessonId));
+    setActiveTab('quiz');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -303,8 +336,9 @@ export default function App() {
     return <LoginPage />;
   }
 
-  const selectedLesson = lessons.find((l) => l.id === selectedLessonId);
-  const currentLessonProgress = progressMap[selectedLessonId];
+  const normSelectedId = normalizeLessonId(selectedLessonId);
+  const selectedLesson = lessons.find((l) => normalizeLessonId(l.id) === normSelectedId);
+  const currentLessonProgress = progressMap[normSelectedId] || progressMap[selectedLessonId];
   const completedPhraseIdsForSelected = currentLessonProgress?.completedPhrases || [];
   const firstName = userProfile.name.split(' ')[0] || 'Friend';
 
@@ -314,6 +348,9 @@ export default function App() {
       <Navbar
         activeTab={activeTab === 'lesson-detail' ? 'lessons' : activeTab}
         onNavigate={(tab) => {
+          if (tab === 'quiz') {
+            setSelectedQuizLessonId(null);
+          }
           setActiveTab(tab);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
@@ -341,6 +378,7 @@ export default function App() {
             onSaveWord={(p) => handleSaveWord({ ...p, id: `sw-daily-${Date.now()}` } as Phrase)}
             onRemoveWord={handleUnsaveWord}
             onVoiceMissing={() => setShowVoiceNotice(true)}
+            onShowToast={showToast}
           />
         )}
 
@@ -351,6 +389,7 @@ export default function App() {
             error={lessonsError}
             onRetry={loadLessonsFromApi}
             onSelectLesson={handleSelectLesson}
+            onShowToast={showToast}
           />
         )}
 
@@ -364,6 +403,7 @@ export default function App() {
             onSaveWord={handleSaveWord}
             onUnsaveWord={handleUnsaveWord}
             onToggleCompletePhrase={handleTogglePhraseComplete}
+            onTakeQuiz={handleTakeQuiz}
             onVoiceMissing={() => setShowVoiceNotice(true)}
             onStartChatWithScenario={(scId) => handleStartChat(scId)}
           />
@@ -379,8 +419,19 @@ export default function App() {
 
         {activeTab === 'quiz' && (
           <QuizPage
+            initialLessonId={selectedQuizLessonId}
+            lessons={lessons}
+            quizHistory={quizResults}
             onVoiceMissing={() => setShowVoiceNotice(true)}
-            onQuizComplete={handleQuizComplete}
+            onBackToLessons={() => setActiveTab('lessons')}
+            onShowToast={showToast}
+            onQuizFinished={({ percentage }) => {
+              if (percentage >= 60) {
+                showToast('🎉 Lesson Mastered! Next scenario unlocked.');
+              } else {
+                showToast('Quiz recorded. Keep practicing to score 60% or higher!');
+              }
+            }}
           />
         )}
 
@@ -389,6 +440,9 @@ export default function App() {
             user={userProfile}
             stats={stats}
             photoURL={userData?.photoURL || user.photoURL || undefined}
+            savedWords={savedWords}
+            quizHistory={quizResults}
+            onDeleteSavedWord={handleUnsaveWord}
             onLogout={logout}
             onVoiceMissing={() => setShowVoiceNotice(true)}
           />

@@ -22,6 +22,7 @@ export interface QuizRecord {
   lessonId: string;
   score: number;
   total: number;
+  percentage?: number;
   date: string;
 }
 
@@ -33,7 +34,23 @@ export interface PracticeSessionRecord {
   date: string;
 }
 
-const LESSON_ORDER = ['market', 'bus-auto', 'restaurant', 'hospital', 'office'];
+export const LESSON_ORDER = ['market', 'bus-auto', 'restaurant', 'hospital', 'office'];
+
+export function normalizeLessonId(id: string): string {
+  if (!id) return 'market';
+  const lower = id.toLowerCase();
+  if (lower === 'bus' || lower === 'auto' || lower === 'bus_auto') return 'bus-auto';
+  return lower;
+}
+
+export function getNextLessonId(id: string): string | null {
+  const norm = normalizeLessonId(id);
+  const idx = LESSON_ORDER.indexOf(norm);
+  if (idx !== -1 && idx < LESSON_ORDER.length - 1) {
+    return LESSON_ORDER[idx + 1];
+  }
+  return null;
+}
 
 export const firestoreService = {
   // Subscribe to all lesson progress documents for a user
@@ -223,18 +240,138 @@ export const firestoreService = {
     }
   },
 
-  // Save Quiz Result
-  async recordQuizResult(uid: string, result: { lessonId: string; score: number; total: number }) {
-    const colPath = `users/${uid}/quizResults`;
-    const newDocRef = doc(collection(db, 'users', uid, 'quizResults'));
+  // Update streak on completing an activity (lesson, quiz, or AI chat) on a new day
+  async updateStreakOnActivity(uid: string, localDateStr?: string): Promise<{ streak: number; lastActiveDate: string }> {
+    const today = localDateStr || new Date().toLocaleDateString('en-CA');
+    const userRef = doc(db, 'users', uid);
 
     try {
-      await setDoc(newDocRef, {
-        lessonId: result.lessonId,
-        score: result.score,
-        total: result.total,
-        date: new Date().toISOString(),
+      const snap = await getDoc(userRef);
+      if (!snap.exists()) {
+        const initData = {
+          streak: 1,
+          lastActiveDate: today,
+        };
+        await setDoc(userRef, initData, { merge: true });
+        return initData;
+      }
+
+      const userData = snap.data();
+      const lastActive = userData.lastActiveDate || '';
+      const currentStreak = typeof userData.streak === 'number' ? userData.streak : 0;
+
+      // Calculate yesterday based on local calendar date
+      const d = new Date(`${today}T12:00:00Z`);
+      d.setDate(d.getDate() - 1);
+      const yesterday = d.toISOString().split('T')[0];
+
+      let newStreak = currentStreak;
+      if (lastActive === today) {
+        // Multiple activities on the same day: do NOT increase streak twice
+        newStreak = currentStreak > 0 ? currentStreak : 1;
+      } else if (lastActive === yesterday) {
+        // Activity completed on consecutive day: increment streak by 1
+        newStreak = currentStreak + 1;
+      } else {
+        // Missed a day or first activity: reset streak to 1
+        newStreak = 1;
+      }
+
+      await updateDoc(userRef, {
+        streak: newStreak,
+        lastActiveDate: today,
       });
+
+      return { streak: newStreak, lastActiveDate: today };
+    } catch (err) {
+      console.warn('Error updating streak on activity:', err);
+      return { streak: 1, lastActiveDate: today };
+    }
+  },
+
+  // Save Quiz Result, enforce unlock rule (>=60% marks done & unlocks next), and update streak
+  async recordQuizResult(
+    uid: string,
+    result: { lessonId: string; score: number; total: number; percentage?: number; userLocalDate?: string }
+  ): Promise<{ passed: boolean; percentage: number; unlockedLessonId: string | null }> {
+    const colPath = `users/${uid}/quizResults`;
+    const newDocRef = doc(collection(db, 'users', uid, 'quizResults'));
+    const normLessonId = normalizeLessonId(result.lessonId);
+
+    const total = result.total > 0 ? result.total : 5;
+    const score = Math.max(0, Math.min(result.score, total));
+    const percentage = result.percentage ?? Math.round((score / total) * 100);
+    const passed = percentage >= 60;
+    const nowIso = new Date().toISOString();
+
+    try {
+      // 1. Record quiz result document
+      await setDoc(newDocRef, {
+        lessonId: normLessonId,
+        score,
+        total,
+        percentage,
+        date: nowIso,
+      });
+
+      // 2. Update streak for completing quiz activity
+      await this.updateStreakOnActivity(uid, result.userLocalDate);
+
+      let unlockedLessonId: string | null = null;
+
+      // 3. Apply Unlock Rule:
+      // Score >= 60% marks that lesson "done" and unlocks next lesson
+      // Below 60%: keep status as in_progress
+      const progressRef = doc(db, 'users', uid, 'progress', normLessonId);
+      const progSnap = await getDoc(progressRef);
+      const existingCompleted = progSnap.exists() ? progSnap.data()?.completedPhrases || [] : [];
+      const currentStatus = progSnap.exists() ? progSnap.data()?.status : 'in_progress';
+
+      if (passed) {
+        await setDoc(
+          progressRef,
+          {
+            completedPhrases: existingCompleted,
+            status: 'done',
+            updatedAt: nowIso,
+          },
+          { merge: true }
+        );
+
+        // Unlock next lesson in sequence
+        const nextId = getNextLessonId(normLessonId);
+        if (nextId) {
+          const nextRef = doc(db, 'users', uid, 'progress', nextId);
+          const nextSnap = await getDoc(nextRef);
+          if (!nextSnap.exists() || nextSnap.data()?.status === 'locked') {
+            await setDoc(
+              nextRef,
+              {
+                completedPhrases: nextSnap.exists() ? nextSnap.data()?.completedPhrases || [] : [],
+                status: 'in_progress',
+                updatedAt: nowIso,
+              },
+              { merge: true }
+            );
+            unlockedLessonId = nextId;
+          }
+        }
+      } else {
+        // Below 60%: ensure not locked, keep in_progress
+        if (currentStatus !== 'done') {
+          await setDoc(
+            progressRef,
+            {
+              completedPhrases: existingCompleted,
+              status: 'in_progress',
+              updatedAt: nowIso,
+            },
+            { merge: true }
+          );
+        }
+      }
+
+      return { passed, percentage, unlockedLessonId };
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, colPath);
     }
@@ -255,14 +392,19 @@ export const firestoreService = {
         const records: QuizRecord[] = [];
         snapshot.forEach((d) => {
           const data = d.data();
+          const total = data.total || 5;
+          const score = typeof data.score === 'number' ? data.score : 0;
           records.push({
             id: d.id,
-            lessonId: data.lessonId,
-            score: data.score,
-            total: data.total,
-            date: data.date,
+            lessonId: normalizeLessonId(data.lessonId || 'market'),
+            score,
+            total,
+            percentage: typeof data.percentage === 'number' ? data.percentage : Math.round((score / total) * 100),
+            date: data.date || new Date().toISOString(),
           });
         });
+        // Sort newest first
+        records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         onUpdate(records);
       },
       (error) => {
@@ -272,15 +414,13 @@ export const firestoreService = {
     );
   },
 
-  // Record a practice session (>= 3 messages)
+  // Record a practice session (>= 3 messages) and update streak
   async recordPracticeSession(
     uid: string,
-    session: { scenario: string; level: 'Beginner' | 'Intermediate'; messageCount: number }
+    session: { scenario: string; level: 'Beginner' | 'Intermediate'; messageCount: number; userLocalDate?: string }
   ) {
     const colPath = `users/${uid}/practiceSessions`;
     const newDocRef = doc(collection(db, 'users', uid, 'practiceSessions'));
-
-    const todayDateStr = new Date().toISOString().split('T')[0];
 
     try {
       await setDoc(newDocRef, {
@@ -290,11 +430,8 @@ export const firestoreService = {
         date: new Date().toISOString(),
       });
 
-      // Update user lastActiveDate
-      const userRef = doc(db, 'users', uid);
-      await updateDoc(userRef, {
-        lastActiveDate: todayDateStr,
-      });
+      // Update streak for completing AI practice session on a new day
+      await this.updateStreakOnActivity(uid, session.userLocalDate);
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, colPath);
     }

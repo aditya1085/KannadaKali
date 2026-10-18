@@ -23,6 +23,7 @@ interface HomePageProps {
   onSaveWord: (word: { kannada: string; roman: string; english: string }) => void;
   onRemoveWord: (id: string) => void;
   onVoiceMissing: () => void;
+  onShowToast?: (msg: string) => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
@@ -39,7 +40,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   onStartChat,
   onSaveWord,
   onRemoveWord,
-  onVoiceMissing
+  onVoiceMissing,
+  onShowToast,
 }) => {
   return (
     <div className="space-y-7 pb-10">
@@ -98,6 +100,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 key={lesson.id}
                 lesson={lesson}
                 onSelect={onSelectLesson}
+                onLockedClick={() => onShowToast && onShowToast('Finish the previous lesson to unlock')}
               />
             ))}
           </div>

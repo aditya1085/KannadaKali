@@ -5,19 +5,28 @@ import { Lesson } from '../types';
 interface ScenarioCardProps {
   lesson: Lesson;
   onSelect: (lessonId: string) => void;
+  onLockedClick?: () => void;
 }
 
-export const ScenarioCard: React.FC<ScenarioCardProps> = ({ lesson, onSelect }) => {
+export const ScenarioCard: React.FC<ScenarioCardProps> = ({ lesson, onSelect, onLockedClick }) => {
   const isLocked = lesson.status === 'locked';
   const isResume = lesson.status === 'in_progress';
   const isCompleted = lesson.status === 'completed';
   const phraseCount = lesson.phraseCount ?? lesson.totalPhrases ?? 8;
 
+  const handleClick = () => {
+    if (isLocked) {
+      if (onLockedClick) onLockedClick();
+    } else {
+      onSelect(lesson.id);
+    }
+  };
+
   return (
     <div
-      onClick={() => !isLocked && onSelect(lesson.id)}
+      onClick={handleClick}
       className={`bg-white rounded-2xl p-5 kannada-card-shadow kannada-card-shadow-hover flex flex-col justify-between transition-all relative ${
-        isLocked ? 'opacity-65 cursor-not-allowed bg-stone-50' : 'cursor-pointer'
+        isLocked ? 'opacity-65 cursor-pointer bg-stone-50' : 'cursor-pointer'
       } ${
         isResume
           ? 'ring-2 ring-[#FFC107] border-2 border-[#FFC107] shadow-[0_8px_20px_-4px_rgba(255,193,7,0.3)]'
@@ -83,14 +92,13 @@ export const ScenarioCard: React.FC<ScenarioCardProps> = ({ lesson, onSelect }) 
 
         {/* Action Button */}
         <button
-          disabled={isLocked}
           onClick={(e) => {
             e.stopPropagation();
-            if (!isLocked) onSelect(lesson.id);
+            handleClick();
           }}
           className={`w-full min-h-[44px] rounded-[10px] text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
             isLocked
-              ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
+              ? 'bg-stone-200 text-stone-500 hover:bg-stone-300'
               : isResume
               ? 'bg-[#FFC107] text-[#2B2B2B] hover:bg-[#FFE082] shadow-xs active:scale-95'
               : isCompleted
@@ -98,7 +106,7 @@ export const ScenarioCard: React.FC<ScenarioCardProps> = ({ lesson, onSelect }) 
               : 'bg-[#B71C1C] text-white hover:bg-[#8F1414] shadow-xs active:scale-95'
           }`}
         >
-          {isCompleted ? 'Review Lesson' : isResume ? 'Resume Learning' : isLocked ? 'Complete Previous' : 'Start Scenario'}
+          {isCompleted ? 'Review Lesson' : isResume ? 'Resume Learning' : isLocked ? '🔒 Complete Previous' : 'Start Scenario'}
         </button>
       </div>
     </div>

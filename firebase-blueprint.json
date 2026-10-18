@@ -48,6 +48,7 @@
         "lessonId": { "type": "string", "maxLength": 128 },
         "score": { "type": "number" },
         "total": { "type": "number" },
+        "percentage": { "type": "number" },
         "date": { "type": "string" }
       },
       "required": ["score", "total", "date"]

@@ -10,6 +10,7 @@ interface LessonsPageProps {
   error?: string | null;
   onRetry?: () => void;
   onSelectLesson: (id: string) => void;
+  onShowToast?: (msg: string) => void;
 }
 
 export const LessonsPage: React.FC<LessonsPageProps> = ({
@@ -17,7 +18,8 @@ export const LessonsPage: React.FC<LessonsPageProps> = ({
   loading = false,
   error = null,
   onRetry,
-  onSelectLesson
+  onSelectLesson,
+  onShowToast,
 }) => {
   const [filter, setFilter] = useState<'all' | 'in_progress' | 'completed'>('all');
   const [search, setSearch] = useState('');
@@ -117,6 +119,7 @@ export const LessonsPage: React.FC<LessonsPageProps> = ({
               key={lesson.id}
               lesson={lesson}
               onSelect={onSelectLesson}
+              onLockedClick={() => onShowToast && onShowToast('Finish the previous lesson to unlock')}
             />
           ))}
         </div>

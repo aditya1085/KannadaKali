@@ -31,9 +31,9 @@ export const StatCards: React.FC<StatCardsProps> = ({ stats }) => {
     {
       id: 'quizScore',
       emoji: '🏆',
-      value: `${stats.avgQuizScore}%`,
+      value: stats.avgQuizScore !== null && stats.avgQuizScore !== undefined ? `${stats.avgQuizScore}%` : '-',
       label: 'Avg quiz score',
-      subtext: stats.avgQuizScore > 0 ? 'Mastery accuracy' : 'Take a quiz to score'
+      subtext: stats.avgQuizScore !== null && stats.avgQuizScore !== undefined ? 'Mastery accuracy' : 'Take a quiz to score'
     }
   ];
 

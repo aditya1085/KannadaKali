@@ -4,6 +4,7 @@ import { ChatScenario, ChatMessage } from '../types';
 import { api, ChatHint } from '../services/api';
 import { speakKannada } from '../utils/speech';
 import { useAuth } from '../context/AuthContext';
+import { firestoreService } from '../services/firestoreService';
 
 interface PracticeChatPageProps {
   initialScenarioId?: string;
@@ -156,6 +157,15 @@ export const PracticeChatPage: React.FC<PracticeChatPageProps> = ({
           timestamp: reply.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
+
+      if (user && activeScenario) {
+        // Record practice session activity and update streak
+        firestoreService.recordPracticeSession(user.uid, {
+          scenario: activeScenario.title,
+          level: selectedLevel,
+          messageCount: nextMessages.length + 1,
+        }).catch((e) => console.warn('Practice session log notice:', e));
+      }
     } catch (err: any) {
       console.error('Chat error:', err);
       setErrorMessage(err?.message || 'Could not connect to the AI chat service. Please check your connection.');

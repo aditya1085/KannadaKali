@@ -24,6 +24,35 @@ let savedWordsData = loadJson('savedWords.json') || [];
 let quizData = loadJson('quizData.json') || { quizzes: [] };
 let chatScenariosData = loadJson('chatScenarios.json') || [];
 
+// Firebase Applet Config for Firestore REST integration
+let firebaseConfig: any = {};
+try {
+  const configPath = path.resolve(process.cwd(), 'firebase-applet-config.json');
+  if (fs.existsSync(configPath)) {
+    firebaseConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+  }
+} catch (e) {
+  console.warn('Could not read firebase-applet-config.json:', e);
+}
+
+const LESSON_ORDER = ['market', 'bus-auto', 'restaurant', 'hospital', 'office'];
+
+function normalizeLessonId(id: string): string {
+  if (!id) return 'market';
+  const lower = id.toLowerCase();
+  if (lower === 'bus' || lower === 'auto' || lower === 'bus_auto') return 'bus-auto';
+  return lower;
+}
+
+function getNextLessonId(id: string): string | null {
+  const norm = normalizeLessonId(id);
+  const idx = LESSON_ORDER.indexOf(norm);
+  if (idx !== -1 && idx < LESSON_ORDER.length - 1) {
+    return LESSON_ORDER[idx + 1];
+  }
+  return null;
+}
+
 // Initialize Gemini Client
 const geminiApiKey = process.env.GEMINI_API_KEY || '';
 const ai = geminiApiKey
@@ -62,13 +91,16 @@ function isRateLimited(userId: string): boolean {
 }
 
 // Helper to verify Firebase ID Token
-async function verifyAuthToken(req: Request): Promise<string | null> {
+function getRawAuthToken(req: Request): string | null {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null;
   }
+  return authHeader.split('Bearer ')[1]?.trim() || null;
+}
 
-  const token = authHeader.split('Bearer ')[1]?.trim();
+async function verifyAuthToken(req: Request): Promise<string | null> {
+  const token = getRawAuthToken(req);
   if (!token) return null;
 
   try {
@@ -104,6 +136,74 @@ async function verifyAuthToken(req: Request): Promise<string | null> {
   }
 
   return null;
+}
+
+// Firestore REST API helpers to save data directly from server
+async function saveQuizResultToFirestore(
+  token: string,
+  uid: string,
+  data: { lessonId: string; score: number; total: number; percentage: number; date: string }
+) {
+  if (!firebaseConfig.projectId || !firebaseConfig.firestoreDatabaseId) return;
+  const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/users/${uid}/quizResults`;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fields: {
+          lessonId: { stringValue: data.lessonId },
+          score: { integerValue: String(data.score) },
+          total: { integerValue: String(data.total) },
+          percentage: { integerValue: String(data.percentage) },
+          date: { stringValue: data.date },
+        },
+      }),
+    });
+  } catch (err) {
+    console.warn('Server Firestore REST quiz save note:', err);
+  }
+}
+
+async function updateLessonProgressInFirestore(
+  token: string,
+  uid: string,
+  lessonId: string,
+  status: string,
+  completedPhrases?: string[]
+) {
+  if (!firebaseConfig.projectId || !firebaseConfig.firestoreDatabaseId) return;
+  const fields: Record<string, any> = {
+    status: { stringValue: status },
+    updatedAt: { stringValue: new Date().toISOString() },
+  };
+  let updateMask = 'updateMask.fieldPaths=status&updateMask.fieldPaths=updatedAt';
+
+  if (completedPhrases && Array.isArray(completedPhrases)) {
+    fields.completedPhrases = {
+      arrayValue: {
+        values: completedPhrases.map((p) => ({ stringValue: p })),
+      },
+    };
+    updateMask += '&updateMask.fieldPaths=completedPhrases';
+  }
+
+  const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/users/${uid}/progress/${lessonId}?${updateMask}`;
+  try {
+    await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ fields }),
+    });
+  } catch (err) {
+    console.warn('Server Firestore REST progress note:', err);
+  }
 }
 
 // Clean JSON response string from markdown codeblocks
@@ -450,37 +550,142 @@ Return ONLY valid JSON with keys: kannada, roman, english.`,
   });
 });
 
-// POST /api/quiz/submit
-apiRouter.post('/quiz/submit', (req: Request, res: Response) => {
-  const { quizId, selectedOptionId } = req.body;
-  const quiz = quizData.quizzes?.find((q: any) => q.id === quizId);
-
-  if (!quiz) {
-    return res.status(404).json({ success: false, message: 'Quiz question not found' });
+// POST /api/quiz/submit - Validate score, save to Firestore, apply unlock rule
+apiRouter.post('/quiz/submit', async (req: Request, res: Response) => {
+  // 1. Verify User Token
+  const userId = await verifyAuthToken(req);
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Unauthorized. Please sign in to submit quiz results.',
+    });
   }
 
-  const isCorrect = quiz.correctOptionId === selectedOptionId;
+  const rawToken = getRawAuthToken(req) || '';
+
+  // Check if legacy single-question check
+  if (req.body.quizId && req.body.selectedOptionId) {
+    const quiz = quizData.quizzes?.find((q: any) => q.id === req.body.quizId);
+    if (!quiz) {
+      return res.status(404).json({ success: false, message: 'Quiz question not found' });
+    }
+    const isCorrect = quiz.correctOptionId === req.body.selectedOptionId;
+    return res.json({
+      success: true,
+      result: {
+        isCorrect,
+        correctOptionId: quiz.correctOptionId,
+        explanation: quiz.explanation,
+        score: isCorrect ? 100 : 0,
+      },
+    });
+  }
+
+  // Full Quiz Completion Submission
+  const { lessonId, score = 0, total = 5, userLocalDate } = req.body;
+  if (!lessonId) {
+    return res.status(400).json({ success: false, message: 'lessonId is required' });
+  }
+
+  const normLessonId = normalizeLessonId(lessonId);
+  const validatedTotal = Math.max(1, typeof total === 'number' ? total : 5);
+  const validatedScore = Math.max(0, Math.min(typeof score === 'number' ? score : 0, validatedTotal));
+  const percentage = Math.round((validatedScore / validatedTotal) * 100);
+  const passed = percentage >= 60;
+  const dateStr = new Date().toISOString();
+
+  // 2. Save result to Firestore subcollection users/{uid}/quizResults
+  await saveQuizResultToFirestore(rawToken, userId, {
+    lessonId: normLessonId,
+    score: validatedScore,
+    total: validatedTotal,
+    percentage,
+    date: dateStr,
+  });
+
+  let unlockedLessonId: string | null = null;
+
+  // 3. Apply Unlock Rule:
+  // Score >= 60% marks lesson 'done' and unlocks the next lesson
+  if (passed) {
+    await updateLessonProgressInFirestore(rawToken, userId, normLessonId, 'done');
+    const nextId = getNextLessonId(normLessonId);
+    if (nextId) {
+      await updateLessonProgressInFirestore(rawToken, userId, nextId, 'in_progress');
+      unlockedLessonId = nextId;
+    }
+  } else {
+    // Below 60%: keep status in_progress
+    await updateLessonProgressInFirestore(rawToken, userId, normLessonId, 'in_progress');
+  }
+
   res.json({
     success: true,
     result: {
-      isCorrect,
-      correctOptionId: quiz.correctOptionId,
-      explanation: quiz.explanation,
-      score: isCorrect ? 100 : 0,
+      lessonId: normLessonId,
+      score: validatedScore,
+      total: validatedTotal,
+      percentage,
+      passed,
+      date: dateStr,
     },
+    unlockedLessonId,
+    message: passed
+      ? 'Lesson passed with 60% or higher! Next lesson unlocked.'
+      : 'Score was below 60%. Try again to master the scenario.',
   });
 });
 
-// GET /api/progress
-apiRouter.get('/progress', (req: Request, res: Response) => {
+// GET /api/progress - Real user progress and daily phrase
+apiRouter.get('/progress', async (req: Request, res: Response) => {
   const dailyPhrase = getDailyPhraseFromLessons();
+  const userId = await verifyAuthToken(req);
+
   res.json({
     success: true,
     data: {
       ...progressData,
+      userId: userId || null,
       dailyPhrase,
       savedWords: savedWordsData,
     },
+  });
+});
+
+// POST /api/progress - Update lesson progress or saved words
+apiRouter.post('/progress', async (req: Request, res: Response) => {
+  const userId = await verifyAuthToken(req);
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Unauthorized. Sign in to update progress.',
+    });
+  }
+
+  const rawToken = getRawAuthToken(req) || '';
+  const { action, lessonId, completedPhrases, status, word } = req.body;
+
+  if (action === 'update_progress' && lessonId) {
+    const normId = normalizeLessonId(lessonId);
+    await updateLessonProgressInFirestore(
+      rawToken,
+      userId,
+      normId,
+      status || 'in_progress',
+      completedPhrases
+    );
+
+    return res.json({
+      success: true,
+      lessonId: normId,
+      status: status || 'in_progress',
+      completedPhrases: completedPhrases || [],
+    });
+  }
+
+  res.json({
+    success: true,
+    message: 'Progress recorded.',
   });
 });
 
