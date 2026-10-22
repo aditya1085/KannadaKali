@@ -13,11 +13,21 @@ export interface UserDocData {
   lastActiveDate: string;
 }
 
+export interface AppUser {
+  uid: string;
+  displayName: string | null;
+  email: string | null;
+  photoURL: string | null;
+  getIdToken: () => Promise<string>;
+}
+
 interface AuthContextType {
-  user: FirebaseUser | null;
+  user: (FirebaseUser | AppUser) | null;
   userData: UserDocData | null;
   loading: boolean;
+  isGuest: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInAsGuest: () => void;
   logout: () => Promise<void>;
   refreshUserData: () => Promise<void>;
 }
@@ -27,8 +37,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const LESSON_IDS = ['market', 'bus-auto', 'restaurant', 'hospital', 'office'];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [user, setUser] = useState<(FirebaseUser | AppUser) | null>(null);
   const [userData, setUserData] = useState<UserDocData | null>(null);
+  const [isGuest, setIsGuest] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
   // Helper to get local date key YYYY-MM-DD
@@ -116,17 +127,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInAsGuest = () => {
+    try {
+      localStorage.setItem('kannadakali_is_guest', 'true');
+    } catch {}
+    const guestUser: AppUser = {
+      uid: 'guest-learner',
+      displayName: 'Kannada Learner',
+      email: 'guest@kannadakali.local',
+      photoURL: '',
+      getIdToken: async () => 'guest-token-session',
+    };
+    const guestUserData: UserDocData = {
+      uid: 'guest-learner',
+      name: 'Kannada Learner',
+      email: 'guest@kannadakali.local',
+      photoURL: '',
+      createdAt: new Date().toISOString(),
+      streak: 1,
+      lastActiveDate: getTodayDateStr(),
+    };
+    setIsGuest(true);
+    setUser(guestUser);
+    setUserData(guestUserData);
+    setLoading(false);
+  };
+
   useEffect(() => {
     validateFirestoreConnection();
 
+    // Check if user was previously in guest mode
+    const isGuestSaved = typeof window !== 'undefined' && localStorage.getItem('kannadakali_is_guest') === 'true';
+
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      setUser(fbUser);
-      if (fbUser) {
-        await syncUserDoc(fbUser);
-      } else {
-        setUserData(null);
+      try {
+        if (fbUser) {
+          try {
+            localStorage.removeItem('kannadakali_is_guest');
+          } catch {}
+          setIsGuest(false);
+          setUser(fbUser);
+          await syncUserDoc(fbUser);
+        } else if (isGuestSaved) {
+          signInAsGuest();
+        } else {
+          setUser(null);
+          setUserData(null);
+          setIsGuest(false);
+        }
+      } catch (err) {
+        console.warn('Notice during user session init:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -137,7 +190,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
-      console.error('Google Sign-In Error:', error);
+      console.warn('Google Sign-In notice:', error);
       setLoading(false);
       throw error;
     }
@@ -145,7 +198,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await signOut(auth);
+      try {
+        localStorage.removeItem('kannadakali_is_guest');
+      } catch {}
+      setIsGuest(false);
+      if (auth.currentUser) {
+        await signOut(auth);
+      }
       setUser(null);
       setUserData(null);
     } catch (error) {
@@ -160,7 +219,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         userData,
         loading,
+        isGuest,
         signInWithGoogle,
+        signInAsGuest,
         logout,
         refreshUserData,
       }}

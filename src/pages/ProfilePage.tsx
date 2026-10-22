@@ -10,6 +10,8 @@ interface ProfilePageProps {
   photoURL?: string;
   savedWords?: SavedWord[];
   quizHistory?: QuizRecord[];
+  isGuest?: boolean;
+  onSignInWithGoogle?: () => void;
   onDeleteSavedWord?: (wordId: string) => void;
   onLogout?: () => void;
   onVoiceMissing?: () => void;
@@ -21,6 +23,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   photoURL,
   savedWords = [],
   quizHistory = [],
+  isGuest = false,
+  onSignInWithGoogle,
   onDeleteSavedWord,
   onLogout,
   onVoiceMissing,
@@ -94,11 +98,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               <h1 className="text-2xl font-bold text-[#2B2B2B]">
                 {user.name}
               </h1>
-              <span className="text-[11px] font-bold text-[#B71C1C] bg-[#FFF0B3] px-2 py-0.5 rounded-full border border-[#FFE082]">
-                Verified Learner
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                isGuest
+                  ? 'text-amber-800 bg-amber-100 border-amber-300'
+                  : 'text-[#B71C1C] bg-[#FFF0B3] border-[#FFE082]'
+              }`}>
+                {isGuest ? 'Guest Mode' : 'Verified Learner'}
               </span>
             </div>
-            <p className="text-xs text-[#6B5B4B] mt-0.5">{user.email}</p>
+            <p className="text-xs text-[#6B5B4B] mt-0.5">
+              {isGuest ? 'Local session · Progress saved on this device' : user.email}
+            </p>
             <p className="text-xs text-[#6B5B4B] mt-1">
               Member since: <span className="font-semibold text-[#2B2B2B]">{user.joinedDate}</span>
             </p>
@@ -106,6 +116,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 self-start sm:self-center">
+          {isGuest && onSignInWithGoogle && (
+            <button
+              onClick={onSignInWithGoogle}
+              className="min-h-[44px] px-4 py-2 rounded-[10px] bg-white border-2 border-[#FFC107] text-[#2B2B2B] hover:bg-[#FFF8E1] text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs"
+            >
+              <span>Sign In with Google</span>
+            </button>
+          )}
+
           <button
             onClick={handleTestAudio}
             disabled={isTestingAudio}
@@ -121,7 +140,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               className="min-h-[44px] px-4 py-2 rounded-[10px] bg-white border border-[#FFE082] text-[#B71C1C] hover:bg-[#FFF8E1] text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs"
             >
               <LogOut size={15} />
-              <span>Sign Out</span>
+              <span>{isGuest ? 'Exit Guest Mode' : 'Sign Out'}</span>
             </button>
           )}
         </div>

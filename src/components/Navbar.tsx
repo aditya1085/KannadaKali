@@ -7,6 +7,7 @@ interface NavbarProps {
   userName?: string;
   photoURL?: string;
   avatarInitial?: string;
+  isGuest?: boolean;
   onLogout?: () => void;
 }
 
@@ -16,6 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   userName = 'Learner',
   photoURL,
   avatarInitial = 'K',
+  isGuest = false,
   onLogout
 }) => {
   const [imgError, setImgError] = useState(false);
@@ -119,6 +121,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-sm font-semibold text-[#2B2B2B] hidden sm:inline max-w-[120px] truncate">
                 {userName}
               </span>
+              {isGuest && (
+                <span className="hidden md:inline-block text-[10px] font-bold bg-[#B71C1C] text-white px-2 py-0.5 rounded-full">
+                  Guest
+                </span>
+              )}
             </button>
 
             {/* Logout button */}

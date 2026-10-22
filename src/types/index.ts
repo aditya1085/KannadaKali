@@ -45,6 +45,7 @@ export interface SavedWord {
   hindi?: string;
   category?: string;
   tip?: string;
+  savedAt?: string;
 }
 
 export interface WeeklyDayActivity {

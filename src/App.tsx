@@ -21,7 +21,7 @@ import { useAuth } from './context/AuthContext';
 import { firestoreService, UserLessonProgress, QuizRecord, PracticeSessionRecord, normalizeLessonId } from './services/firestoreService';
 
 export default function App() {
-  const { user, userData, loading: authLoading, logout } = useAuth();
+  const { user, userData, isGuest, loading: authLoading, signInWithGoogle, logout } = useAuth();
 
   const [activeTab, setActiveTab] = useState<string>('home');
   const [selectedLessonId, setSelectedLessonId] = useState<string>('market');
@@ -359,6 +359,7 @@ export default function App() {
         userName={firstName}
         photoURL={userData?.photoURL || user.photoURL || undefined}
         avatarInitial={userProfile.avatarInitials}
+        isGuest={isGuest}
         onLogout={logout}
       />
 
@@ -444,6 +445,8 @@ export default function App() {
             photoURL={userData?.photoURL || user.photoURL || undefined}
             savedWords={savedWords}
             quizHistory={quizResults}
+            isGuest={isGuest}
+            onSignInWithGoogle={signInWithGoogle}
             onDeleteSavedWord={handleUnsaveWord}
             onLogout={logout}
             onVoiceMissing={() => setShowVoiceNotice(true)}
