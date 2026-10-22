@@ -50,7 +50,8 @@ export function speakKannada(
   onVoiceMissing?: () => void
 ) {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-    alert?.('Speech synthesis is not supported on this browser.');
+    console.warn('Speech synthesis is not supported on this browser.');
+    if (onVoiceMissing) onVoiceMissing();
     return;
   }
 

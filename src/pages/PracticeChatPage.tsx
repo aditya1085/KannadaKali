@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Volume2, Sparkles, RefreshCw, Bot, User, ArrowLeft, Lightbulb, X, AlertCircle } from 'lucide-react';
+import { Send, Sparkles, RefreshCw, Bot, User, ArrowLeft, Lightbulb, X, AlertCircle } from 'lucide-react';
 import { ChatScenario, ChatMessage } from '../types';
 import { api, ChatHint } from '../services/api';
-import { speakKannada } from '../utils/speech';
 import { useAuth } from '../context/AuthContext';
 import { firestoreService } from '../services/firestoreService';
+import { AudioButton } from '../components/AudioButton';
 
 interface PracticeChatPageProps {
   initialScenarioId?: string;
@@ -209,17 +209,6 @@ export const PracticeChatPage: React.FC<PracticeChatPageProps> = ({
     } finally {
       setIsLoadingHint(false);
     }
-  };
-
-  const handleListen = (text: string) => {
-    speakKannada(
-      text,
-      undefined,
-      undefined,
-      () => {
-        if (onVoiceMissing) onVoiceMissing();
-      }
-    );
   };
 
   // 1. SCENARIO & LEVEL PICKER VIEW
@@ -519,14 +508,13 @@ export const PracticeChatPage: React.FC<PracticeChatPageProps> = ({
                       </span>
 
                       {isBot && (
-                        <button
-                          onClick={() => handleListen(msg.kannada)}
-                          className="text-[11px] font-semibold text-[#B71C1C] hover:bg-[#FFF0B3] px-2 py-0.5 rounded flex items-center gap-1 transition-all"
-                          title="Listen to pronunciation"
-                        >
-                          <Volume2 size={13} />
-                          <span>Listen</span>
-                        </button>
+                        <AudioButton
+                          text={msg.kannada}
+                          variant="pill"
+                          size="sm"
+                          label="Listen"
+                          ariaLabel={`Listen to "${msg.roman || msg.kannada}"`}
+                        />
                       )}
                     </div>
                   </div>
@@ -588,8 +576,16 @@ export const PracticeChatPage: React.FC<PracticeChatPageProps> = ({
                 <div className="text-[11px] font-bold uppercase tracking-wider text-[#B71C1C]">
                   Suggested what to say next:
                 </div>
-                <div className="font-kannada font-bold text-base text-[#2B2B2B] mt-0.5">
-                  {hint.kannada}
+                <div className="flex items-center gap-2 mt-0.5">
+                  <div className="font-kannada font-bold text-base text-[#2B2B2B]">
+                    {hint.kannada}
+                  </div>
+                  <AudioButton
+                    text={hint.kannada}
+                    variant="icon"
+                    size="sm"
+                    ariaLabel="Listen to hint pronunciation"
+                  />
                 </div>
                 <div className="text-xs font-semibold text-[#6B5B4B]">
                   {hint.roman} · <span className="font-normal italic">"{hint.english}"</span>

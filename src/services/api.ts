@@ -314,5 +314,43 @@ export const api = {
     }
     const json = await res.json();
     return json.result;
+  },
+
+  // POST /api/tts - Server-side Kannada Text-to-Speech
+  async getTtsAudio(params: {
+    text: string;
+    slow?: boolean;
+    idToken?: string;
+  }): Promise<{ audio: string; mimeType: string; provider: string; cached?: boolean }> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (params.idToken) {
+      headers['Authorization'] = `Bearer ${params.idToken}`;
+    }
+
+    const res = await fetch('/api/tts', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        text: params.text,
+        slow: !!params.slow,
+      }),
+    });
+
+    if (!res.ok) {
+      let msg = 'Failed to generate speech audio';
+      try {
+        const errJson = await res.json();
+        msg = errJson.message || msg;
+      } catch {}
+      throw new ApiError(msg, res.status);
+    }
+
+    const json = await res.json();
+    if (!json.success || !json.audio) {
+      throw new ApiError(json.message || 'Invalid TTS audio response');
+    }
+    return json;
   }
 };

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Volume2, Trash2, BookmarkCheck, Search } from 'lucide-react';
+import { Trash2, BookmarkCheck, Search } from 'lucide-react';
 import { SavedWord } from '../types';
-import { speakKannada } from '../utils/speech';
+import { AudioButton } from './AudioButton';
 
 interface SavedWordsCardProps {
   words: SavedWord[];
@@ -12,9 +12,7 @@ interface SavedWordsCardProps {
 export const SavedWordsCard: React.FC<SavedWordsCardProps> = ({
   words,
   onRemoveWord,
-  onVoiceMissing
 }) => {
-  const [playingWordId, setPlayingWordId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredWords = words.filter(
@@ -23,18 +21,6 @@ export const SavedWordsCard: React.FC<SavedWordsCardProps> = ({
       w.roman.toLowerCase().includes(searchQuery.toLowerCase()) ||
       w.english.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const handleListen = (word: SavedWord) => {
-    setPlayingWordId(word.id);
-    speakKannada(
-      word.kannada,
-      () => setPlayingWordId(word.id),
-      () => setPlayingWordId(null),
-      () => {
-        if (onVoiceMissing) onVoiceMissing();
-      }
-    );
-  };
 
   return (
     <div className="bg-white rounded-2xl p-5 md:p-6 kannada-card-shadow border border-[#FFF0B3]/80">
@@ -81,7 +67,6 @@ export const SavedWordsCard: React.FC<SavedWordsCardProps> = ({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
           {filteredWords.map((word) => {
-            const isPlaying = playingWordId === word.id;
             return (
               <div
                 key={word.id}
@@ -102,16 +87,12 @@ export const SavedWordsCard: React.FC<SavedWordsCardProps> = ({
                 {/* Actions: Listen & Delete */}
                 <div className="flex items-center gap-1 shrink-0">
                   {/* Listen icon button */}
-                  <button
-                    onClick={() => handleListen(word)}
-                    disabled={isPlaying}
-                    title="Pronounce word"
-                    className={`p-2 rounded-lg text-[#2B2B2B] hover:text-[#B71C1C] hover:bg-white active:scale-95 transition-all ${
-                      isPlaying ? 'text-[#B71C1C] bg-white animate-pulse' : ''
-                    }`}
-                  >
-                    <Volume2 size={16} />
-                  </button>
+                  <AudioButton
+                    text={word.kannada}
+                    variant="icon"
+                    size="sm"
+                    ariaLabel={`Pronounce ${word.roman}`}
+                  />
 
                   {/* Delete icon button */}
                   <button

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Volume2, Heart, Check, Sparkles, Lightbulb, CheckCircle2, Award } from 'lucide-react';
+import { ArrowLeft, Heart, Check, Sparkles, Lightbulb, CheckCircle2, Award } from 'lucide-react';
 import { Lesson, Phrase } from '../types';
 import { api } from '../services/api';
-import { speakKannada } from '../utils/speech';
 import { PhraseCardSkeleton, ErrorStateView } from '../components/LoadingSkeleton';
+import { AudioButton } from '../components/AudioButton';
 
 interface LessonDetailPageProps {
   lessonId: string;
@@ -35,7 +35,6 @@ export const LessonDetailPage: React.FC<LessonDetailPageProps> = ({
   const [lesson, setLesson] = useState<Lesson | null>(initialLesson || null);
   const [loading, setLoading] = useState<boolean>(!initialLesson || !initialLesson.phrases?.length);
   const [error, setError] = useState<string | null>(null);
-  const [playingId, setPlayingId] = useState<string | null>(null);
 
   const fetchLesson = async () => {
     try {
@@ -54,22 +53,6 @@ export const LessonDetailPage: React.FC<LessonDetailPageProps> = ({
   useEffect(() => {
     fetchLesson();
   }, [lessonId]);
-
-  const handleListen = (phrase: Phrase) => {
-    setPlayingId(phrase.id);
-    // Growing progress as user views or listens to phrases
-    if (onToggleCompletePhrase && !completedPhraseIds.includes(phrase.id)) {
-      onToggleCompletePhrase(phrase.id);
-    }
-    speakKannada(
-      phrase.kannada,
-      () => setPlayingId(phrase.id),
-      () => setPlayingId(null),
-      () => {
-        if (onVoiceMissing) onVoiceMissing();
-      }
-    );
-  };
 
   const handleToggleSave = (phrase: Phrase) => {
     const isSaved = savedWordIds.has(phrase.id);
@@ -243,7 +226,6 @@ export const LessonDetailPage: React.FC<LessonDetailPageProps> = ({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {phraseList.map((phrase, idx) => {
-              const isPlaying = playingId === phrase.id;
               const isSaved = savedWordIds.has(phrase.id);
               const isLearned = completedPhraseIds.includes(phrase.id);
               const phraseTip = phrase.tip || phrase.usageTip;
@@ -269,19 +251,18 @@ export const LessonDetailPage: React.FC<LessonDetailPageProps> = ({
                       </div>
 
                       {/* Action buttons: Listen, Complete & Save */}
-                      <div className="flex items-center gap-1.5">
-                        {/* Listen button */}
-                        <button
-                          onClick={() => handleListen(phrase)}
-                          disabled={isPlaying}
-                          className={`min-h-[38px] px-2.5 py-1.5 rounded-[10px] text-xs font-bold bg-[#FFC107] text-[#2B2B2B] hover:bg-[#FFE082] active:scale-95 transition-all flex items-center gap-1 shadow-2xs ${
-                            isPlaying ? 'ring-2 ring-[#B71C1C] animate-pulse' : ''
-                          }`}
-                          title="Listen to pronunciation"
-                        >
-                          <Volume2 size={14} />
-                          <span className="hidden sm:inline">{isPlaying ? 'Playing...' : '🔊 Listen'}</span>
-                        </button>
+                      <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                        {/* AudioButton with 🐢 slow toggle option */}
+                        <AudioButton
+                          text={phrase.kannada}
+                          showSlowToggle={true}
+                          onPlayStart={() => {
+                            if (onToggleCompletePhrase && !completedPhraseIds.includes(phrase.id)) {
+                              onToggleCompletePhrase(phrase.id);
+                            }
+                          }}
+                          ariaLabel={`Listen to ${phrase.roman}`}
+                        />
 
                         {/* Toggle Learned button */}
                         {onToggleCompletePhrase && (

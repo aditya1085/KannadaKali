@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Award, CheckCircle2, XCircle, Volume2, ArrowRight, ArrowLeft, RotateCcw, Lock, Sparkles, Check } from 'lucide-react';
+import { Award, CheckCircle2, XCircle, ArrowRight, ArrowLeft, RotateCcw, Lock, Sparkles, Check } from 'lucide-react';
 import { Lesson, QuizQuestion } from '../types';
 import { api } from '../services/api';
-import { speakKannada } from '../utils/speech';
 import { generateLessonQuiz } from '../utils/quizGenerator';
 import { useAuth } from '../context/AuthContext';
 import { firestoreService, QuizRecord, normalizeLessonId } from '../services/firestoreService';
+import { AudioButton } from '../components/AudioButton';
 
 interface QuizPageProps {
   initialLessonId?: string | null;
@@ -199,21 +199,6 @@ export const QuizPage: React.FC<QuizPageProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleListen = (kannadaText?: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    const textToSpeak = kannadaText || currentQuestion?.audioKannada || currentQuestion?.promptText || '';
-    if (!textToSpeak) return;
-
-    speakKannada(
-      textToSpeak,
-      undefined,
-      undefined,
-      () => {
-        if (onVoiceMissing) onVoiceMissing();
-      }
-    );
   };
 
   const handleRetry = () => {
@@ -578,14 +563,13 @@ export const QuizPage: React.FC<QuizPageProps> = ({
 
             {/* 🔊 Pronunciation Button for Kannada text */}
             {currentQuestion.audioKannada && (
-              <button
-                onClick={(e) => handleListen(currentQuestion.audioKannada, e)}
-                className="p-3 rounded-2xl bg-[#FFC107] text-[#2B2B2B] hover:bg-[#FFE082] active:scale-95 transition-all shadow-xs shrink-0 flex items-center gap-1.5"
-                title="Listen to native Kannada audio"
-              >
-                <Volume2 size={20} />
-                <span className="text-xs font-bold hidden sm:inline">Listen</span>
-              </button>
+              <AudioButton
+                text={currentQuestion.audioKannada}
+                variant="button"
+                size="md"
+                label="Listen"
+                ariaLabel={`Listen to ${currentQuestion.promptSubtext || 'native Kannada audio'}`}
+              />
             )}
           </div>
         </div>
@@ -650,13 +634,12 @@ export const QuizPage: React.FC<QuizPageProps> = ({
 
                 {/* Option Listen Button if it contains Kannada */}
                 {option.kannada && (
-                  <button
-                    onClick={(e) => handleListen(option.kannada, e)}
-                    className="p-2 rounded-lg text-[#6B5B4B] hover:text-[#B71C1C] hover:bg-[#FFF8E1] transition-all shrink-0"
-                    title="Pronounce option"
-                  >
-                    <Volume2 size={16} />
-                  </button>
+                  <AudioButton
+                    text={option.kannada}
+                    variant="icon"
+                    size="sm"
+                    ariaLabel={`Pronounce option ${option.displayText}`}
+                  />
                 )}
               </div>
             );

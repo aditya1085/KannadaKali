@@ -16,8 +16,11 @@ KannadaKali is an interactive, practical language learning web platform designed
    - **Office & Workplace (ಕಚೇರಿ)**: Professional greetings, water cooler chats, polite requests.
    - Each lesson features 8 practical spoken phrases with Kannada script, Roman phonetic transliteration, English translation, Hinglish meaning, and everyday usage tips.
 
-2. **Native Audio Pronunciation**
-   - Integrated with browser Web Speech API (`kn-IN`) across all phrases, vocabulary cards, and quiz prompts for authentic regional ear-training.
+2. **High-Fidelity Kannada Audio Pronunciation (Server-side TTS + Fallbacks)**
+   - Powered by `POST /api/tts` on Express using Gemini Text-to-Speech (`gemini-3.8-flash-lite-tts`) with Google Cloud Text-to-Speech (`kn-IN` voice) fallback.
+   - SHA-256 hashed disk + in-memory audio caching for instantaneous re-plays and zero quota waste.
+   - Fallback hierarchy: Server-side Kannada audio -> Web Speech API (`kn-IN`, then `hi-IN`) -> Graceful non-blocking feedback.
+   - Unified `AudioButton` component used everywhere 🔊 appears, complete with loading spinners, active playing states, quick-tap cancellation, and a 🐢 slow (0.75x) mode for learners.
 
 3. **AI Practice Chat (Gemini 3.8 Flash)**
    - Simulated roleplays with a friendly vegetable vendor, auto driver, or colleague.
@@ -37,7 +40,7 @@ KannadaKali is an interactive, practical language learning web platform designed
    - One-tap bookmarking to save useful words into a personal vocabulary bank on the Profile page, complete with listen and delete actions.
 
 7. **Firebase Authentication & Secure Firestore Storage**
-   - Google Sign-In with protected routes.
+   - Google Sign-In with protected routes and guest fallback mode.
    - Attribute-Based Access Control (ABAC) in `firestore.rules` ensuring users can only read and write their own records.
 
 8. **Hackathon About Page & Responsive Design**
@@ -49,8 +52,8 @@ KannadaKali is an interactive, practical language learning web platform designed
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React 19, TypeScript, Tailwind CSS, Lucide Icons, Web Speech API (`kn-IN`)
-- **Backend**: Node.js 22, Express REST API
+- **Frontend**: React 19, TypeScript, Tailwind CSS, Lucide Icons, AudioButton
+- **Backend**: Node.js 22, Express REST API, Gemini TTS, Google Cloud TTS
 - **Database & Auth**: Firebase Authentication (Google Sign-In), Cloud Firestore
 - **AI Engine**: Google Gemini 3.8 Flash via `@google/genai` (Server-side proxy routes)
 - **Tooling**: Vite 8, tsx, ESLint / TypeScript compiler
@@ -63,8 +66,8 @@ KannadaKali is an interactive, practical language learning web platform designed
 ┌────────────────────────────────────────────────────────┐
 │             React 19 SPA (Client-side)                 │
 │  - Responsive UI (390px phone to 1280px desktop)       │
-│  - Firebase Auth (Google Sign-In)                       │
-│  - Web Speech API (Native Kannada kn-IN TTS)           │
+│  - Firebase Auth (Google Sign-In + Guest Mode)         │
+│  - Unified AudioButton with Slow (0.75x) Mode          │
 └───────────────────────────┬────────────────────────────┘
                             │ REST calls with Bearer Token
                             ▼
@@ -72,6 +75,7 @@ KannadaKali is an interactive, practical language learning web platform designed
 │             Node.js / Express Server                   │
 │  - GET /api/lessons, GET /api/lessons/:id              │
 │  - POST /api/chat (Server-side Gemini AI roleplay)     │
+│  - POST /api/tts (Gemini & Cloud TTS + Disk Cache)     │
 │  - POST /api/quiz/submit (Token validation + metrics)  │
 │  - GET / POST /api/progress (Sync & streak management) │
 └─────────────┬────────────────────────────┬─────────────┘
@@ -80,9 +84,9 @@ KannadaKali is an interactive, practical language learning web platform designed
 ┌──────────────────────────┐  ┌──────────────────────────┐
 │    Firebase Firestore    │  │     Google Gemini API    │
 │  - users/{uid}           │  │  - gemini-3.8-flash      │
-│  - progress/{lessonId}   │  │  - Contextual roleplay   │
-│  - savedWords/{phraseId} │  │  - Instant corrections   │
-│  - quizResults/{autoId}  │  │  - Strict server secret  │
+│  - progress/{lessonId}   │  │  - gemini-3.8-flash-lite │
+│  - savedWords/{phraseId} │  │  - Contextual roleplay   │
+│  - quizResults/{autoId}  │  │  - Natural Kannada speech│
 └──────────────────────────┘  └──────────────────────────┘
 ```
 

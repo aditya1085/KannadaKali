@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Volume2, Heart, Check, Sparkles, Lightbulb } from 'lucide-react';
-import { speakKannada } from '../utils/speech';
+import { Heart, Check, Lightbulb } from 'lucide-react';
+import { AudioButton } from './AudioButton';
 
 interface DailyPhraseCardProps {
   phrase?: {
@@ -26,24 +26,10 @@ export const DailyPhraseCard: React.FC<DailyPhraseCardProps> = ({
     tip: 'Everyday polite greeting to start any interaction warmly.'
   },
   onSave,
-  onVoiceMissing
 }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
   const displayMeaning = phrase.meaning || phrase.english || 'Hello / Greetings';
-
-  const handleListen = () => {
-    setIsPlaying(true);
-    speakKannada(
-      phrase.kannada,
-      () => setIsPlaying(true),
-      () => setIsPlaying(false),
-      () => {
-        if (onVoiceMissing) onVoiceMissing();
-      }
-    );
-  };
 
   const handleSave = () => {
     setIsSaved(!isSaved);
@@ -105,16 +91,12 @@ export const DailyPhraseCard: React.FC<DailyPhraseCardProps> = ({
         {/* Right: Action Buttons */}
         <div className="flex items-center gap-3 shrink-0">
           {/* Yellow Listen button */}
-          <button
-            onClick={handleListen}
-            disabled={isPlaying}
-            className={`min-h-[44px] px-5 py-2.5 rounded-[10px] font-semibold text-sm bg-[#FFC107] text-[#2B2B2B] hover:bg-[#FFE082] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm ${
-              isPlaying ? 'animate-pulse ring-2 ring-white' : ''
-            }`}
-          >
-            <Volume2 size={18} className={isPlaying ? 'text-[#B71C1C]' : ''} />
-            <span>{isPlaying ? 'Playing...' : '🔊 Listen'}</span>
-          </button>
+          <AudioButton
+            text={phrase.kannada}
+            variant="daily"
+            label="🔊 Listen"
+            ariaLabel={`Listen to daily phrase ${phrase.roman}`}
+          />
 
           {/* White Save button */}
           <button

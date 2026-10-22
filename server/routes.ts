@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { GoogleGenAI } from '@google/genai';
 
 export const apiRouter = Router();
@@ -704,3 +705,210 @@ apiRouter.get('/quiz', (req: Request, res: Response) => {
     data: quizData,
   });
 });
+
+// In-memory & disk audio cache for TTS
+const ttsMemoryCache = new Map<string, { audio: string; mimeType: string; provider: string }>();
+const ttsCacheDir = path.resolve(process.cwd(), '.cache', 'tts');
+
+function getTtsFromCache(key: string): { audio: string; mimeType: string; provider: string } | null {
+  if (ttsMemoryCache.has(key)) {
+    return ttsMemoryCache.get(key) || null;
+  }
+  try {
+    const file = path.join(ttsCacheDir, `${key}.json`);
+    if (fs.existsSync(file)) {
+      const data = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      ttsMemoryCache.set(key, data);
+      return data;
+    }
+  } catch {}
+  return null;
+}
+
+function setTtsCache(key: string, data: { audio: string; mimeType: string; provider: string }) {
+  ttsMemoryCache.set(key, data);
+  try {
+    if (!fs.existsSync(ttsCacheDir)) {
+      fs.mkdirSync(ttsCacheDir, { recursive: true });
+    }
+    fs.writeFileSync(path.join(ttsCacheDir, `${key}.json`), JSON.stringify(data));
+  } catch {}
+}
+
+const ttsRateLimits = new Map<string, RateLimitEntry>();
+function isTtsRateLimited(userId: string): boolean {
+  const now = Date.now();
+  const entry = ttsRateLimits.get(userId);
+  if (!entry || now > entry.resetAt) {
+    ttsRateLimits.set(userId, { count: 1, resetAt: now + 60000 });
+    return false;
+  }
+  if (entry.count >= 40) {
+    return true;
+  }
+  entry.count += 1;
+  return false;
+}
+
+// POST /api/tts - Server-side Text-To-Speech for Kannada phrases
+apiRouter.post('/tts', async (req: Request, res: Response) => {
+  // 1. Verify User Token
+  const userId = await verifyAuthToken(req);
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Unauthorized. Please sign in to use voice pronunciation.',
+    });
+  }
+
+  // 2. Validate input
+  const { text, slow = false } = req.body;
+  if (!text || typeof text !== 'string' || !text.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Text is required for speech synthesis.',
+    });
+  }
+
+  const trimmed = text.trim();
+  if (trimmed.length > 200) {
+    return res.status(400).json({
+      success: false,
+      message: 'Text exceeds maximum limit of 200 characters.',
+    });
+  }
+
+  // 3. Rate limiting (40 req/min per user)
+  if (isTtsRateLimited(userId)) {
+    return res.status(429).json({
+      success: false,
+      message: 'Speech synthesis limit reached. Please wait a moment.',
+    });
+  }
+
+  // 4. Cache check by hash
+  const cacheKey = crypto
+    .createHash('sha256')
+    .update(`${trimmed}_${slow ? 'slow' : 'normal'}`)
+    .digest('hex');
+
+  const cached = getTtsFromCache(cacheKey);
+  if (cached) {
+    return res.json({
+      success: true,
+      audio: cached.audio,
+      mimeType: cached.mimeType,
+      provider: cached.provider,
+      cached: true,
+    });
+  }
+
+  // 5. Primary: Gemini 3.8 TTS (gemini-3.8-flash-lite-tts)
+  if (ai) {
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash-lite-tts',
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text: trimmed,
+                speechMetadata: {
+                  style: slow
+                    ? 'Speak very clearly, slowly, and distinctly in authentic spoken Kannada for a language learner'
+                    : 'Speak naturally, warmly, and clearly in authentic everyday spoken Kannada for a learner',
+                },
+              },
+            ],
+          },
+        ],
+        config: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Kore' },
+            },
+          },
+        },
+      });
+
+      const audioBase64 = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (audioBase64) {
+        const fullDataUrl = `data:audio/wav;base64,${audioBase64}`;
+        setTtsCache(cacheKey, {
+          audio: fullDataUrl,
+          mimeType: 'audio/wav',
+          provider: 'gemini-3.8-flash-lite-tts',
+        });
+
+        return res.json({
+          success: true,
+          audio: fullDataUrl,
+          mimeType: 'audio/wav',
+          provider: 'gemini-3.8-flash-lite-tts',
+          cached: false,
+        });
+      }
+    } catch (geminiErr: any) {
+      console.warn('Gemini 3.8 TTS notice:', geminiErr?.message || geminiErr);
+    }
+  }
+
+  // 6. Secondary Fallback: Google Cloud Text-to-Speech API with kn-IN voice
+  if (geminiApiKey) {
+    try {
+      const cloudRes = await fetch(
+        `https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(geminiApiKey)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            input: { text: trimmed },
+            voice: {
+              languageCode: 'kn-IN',
+              name: 'kn-IN-Standard-A',
+            },
+            audioConfig: {
+              audioEncoding: 'MP3',
+              speakingRate: slow ? 0.75 : 0.9,
+              pitch: 0.0,
+            },
+          }),
+        }
+      );
+
+      if (cloudRes.ok) {
+        const cloudData = await cloudRes.json();
+        if (cloudData.audioContent) {
+          const fullDataUrl = `data:audio/mp3;base64,${cloudData.audioContent}`;
+          setTtsCache(cacheKey, {
+            audio: fullDataUrl,
+            mimeType: 'audio/mp3',
+            provider: 'google-cloud-tts (kn-IN)',
+          });
+
+          return res.json({
+            success: true,
+            audio: fullDataUrl,
+            mimeType: 'audio/mp3',
+            provider: 'google-cloud-tts (kn-IN)',
+            cached: false,
+          });
+        }
+      } else {
+        const errText = await cloudRes.text().catch(() => '');
+        console.warn('Google Cloud TTS returned non-OK status:', cloudRes.status, errText);
+      }
+    } catch (cloudErr: any) {
+      console.warn('Google Cloud TTS fallback notice:', cloudErr?.message || cloudErr);
+    }
+  }
+
+  // 7. If server-side generation is temporarily unavailable, return 503 so client uses browser fallback
+  return res.status(503).json({
+    success: false,
+    message: 'Server speech synthesis currently unavailable. Falling back to browser speech.',
+  });
+});
+

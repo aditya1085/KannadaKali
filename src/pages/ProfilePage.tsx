@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Flame, BookOpen, Star, Trophy, Volume2, LogOut, Trash2, Award, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
+import { Flame, BookOpen, Star, Trophy, LogOut, Trash2, Award, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
 import { UserProfile, UserStats, SavedWord } from '../types';
 import { QuizRecord } from '../services/firestoreService';
-import { speakKannada } from '../utils/speech';
+import { AudioButton } from '../components/AudioButton';
 
 interface ProfilePageProps {
   user: UserProfile;
@@ -27,35 +27,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   onSignInWithGoogle,
   onDeleteSavedWord,
   onLogout,
-  onVoiceMissing,
 }) => {
-  const [isTestingAudio, setIsTestingAudio] = useState(false);
   const [imgError, setImgError] = useState(false);
-  const [playingWordId, setPlayingWordId] = useState<string | null>(null);
-
-  const handleTestAudio = () => {
-    setIsTestingAudio(true);
-    speakKannada(
-      'ನಮಸ್ಕಾರ, ಕನ್ನಡ ಕಲಿ ಆಪ್‌ಗೆ ಸುಸ್ವಾಗತ!',
-      () => setIsTestingAudio(true),
-      () => setIsTestingAudio(false),
-      () => {
-        if (onVoiceMissing) onVoiceMissing();
-      }
-    );
-  };
-
-  const handleListenWord = (word: SavedWord) => {
-    setPlayingWordId(word.id);
-    speakKannada(
-      word.kannada,
-      () => setPlayingWordId(word.id),
-      () => setPlayingWordId(null),
-      () => {
-        if (onVoiceMissing) onVoiceMissing();
-      }
-    );
-  };
 
   const lessonEmojiMap: Record<string, string> = {
     market: '🛒',
@@ -125,14 +98,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             </button>
           )}
 
-          <button
-            onClick={handleTestAudio}
-            disabled={isTestingAudio}
-            className="min-h-[44px] px-4 py-2 rounded-[10px] bg-[#FFC107] text-[#2B2B2B] hover:bg-[#FFE082] text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-xs"
-          >
-            <Volume2 size={16} />
-            <span>{isTestingAudio ? 'Testing Speech...' : 'Test Kannada Voice'}</span>
-          </button>
+          <AudioButton
+            text="ನಮಸ್ಕಾರ, ಕನ್ನಡ ಕಲಿ ಆಪ್‌ಗೆ ಸುಸ್ವಾಗತ!"
+            variant="button"
+            label="Test Kannada Voice"
+            ariaLabel="Test Kannada speech voice"
+          />
 
           {onLogout && (
             <button
@@ -209,7 +180,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             {savedWords.map((word) => {
-              const isPlaying = playingWordId === word.id;
               return (
                 <div
                   key={word.id}
@@ -234,16 +204,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
                   {/* Actions: Listen & Delete */}
                   <div className="flex items-center gap-1 shrink-0 pt-0.5">
-                    <button
-                      onClick={() => handleListenWord(word)}
-                      disabled={isPlaying}
-                      className={`p-2 rounded-lg text-[#2B2B2B] bg-[#FFC107] hover:bg-[#FFE082] transition-all ${
-                        isPlaying ? 'ring-2 ring-[#B71C1C] animate-pulse' : ''
-                      }`}
-                      title="Listen to pronunciation"
-                    >
-                      <Volume2 size={15} />
-                    </button>
+                    <AudioButton
+                      text={word.kannada}
+                      variant="icon"
+                      size="sm"
+                      ariaLabel={`Listen to ${word.roman}`}
+                    />
 
                     {onDeleteSavedWord && (
                       <button
